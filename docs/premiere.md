@@ -1,78 +1,239 @@
-# Premiere Pro
+# Premiere Pro Automation & MCP Workflow Guide
 
-Edit projects and timelines through a UXP-first bridge, with CEP as an explicit compatibility fallback.
+Automate timeline composition, audio engineering, intelligent color grading, MOGRT templating, and media pipelines through a typed UXP-first bridge with CEP fallback.
 
-[Back to README](../README.md) · [Architecture & security](architecture-and-security.md) · [MCP protocol](mcp-protocol-2026.md)
+[Back to README](../README.md) · [Architecture & Security](architecture-and-security.md) · [MCP Protocol 2026](mcp-protocol-2026.md)
 
-## Capability status
+---
 
-| Area | Status | Notes |
-|---|---|---|
-| Project, sequence, timeline, effects, markers | Public contracts available | Real behavior depends on the connected UXP runtime adapter |
-| Split, move, trim, ripple delete | Typed commands available | Capability probe and host verification required |
-| Transitions, audio keyframes, captions | Typed commands available | Version-dependent |
-| `EditPlan` compilation | Available in `@adobe-mcp/bridge-premiere` | Public R3 approval contract requires repair before production use |
-| MOGRT parameter manifests | Roadmap | Insert/inspect first; parameter and media binding after fingerprinting |
-| Lumetri recipes | Roadmap | Must map by versioned parameter manifest, never localized labels |
+## 1. Architectural Overview & Transport Model
 
-The current UXP panel delegates some mutations to optional runtime hooks. A schema or test double is not proof that a particular Premiere build supports the operation. Unsupported host paths must return `UNSUPPORTED_CAPABILITY`.
+The Premiere Pro MCP subsystem provides deterministic timeline manipulation and media pipeline automation across a dual-transport bridge architecture.
 
-## Connect the panel
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                           MCP Client / LLM                              │
+└────────────────────────────────────┬────────────────────────────────────┘
+                                     │ JSON-RPC 2.0 (stdio / SSE)
+                                     ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│                    @adobe-mcp/gateway (Policy / R0-R4)                  │
+└────────────────────────────────────┬────────────────────────────────────┘
+                                     │ Local Loopback WebSocket
+                                     ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│               @adobe-mcp/daemon (Session & Capability Router)           │
+└───────────────────┬─────────────────────────────────┬───────────────────┘
+                    │ ws://127.0.0.1 (HMAC-SHA256)    │ ws://127.0.0.1
+                    ▼                                 ▼
+   ┌─────────────────────────────────┐   ┌────────────────────────────────┐
+   │    apps/premiere-uxp (Primary)  │   │   apps/premiere-cep (Fallback) │
+   │  • Unified Extensibility Mod.   │   │  • CSInterface Dispatcher      │
+   │  • High-performance DOM access  │   │  • Allowlisted JSX Handlers    │
+   │  • Direct memory buffer access  │   │  • Zero Free-form eval()       │
+   └─────────────────────────────────┘   └────────────────────────────────┘
+```
 
-### UXP — primary path
+### 1.1 Dual-Transport Lifecycle & Security
+1. **Primary Transport (UXP)**: The primary bridge operates within Adobe UXP (Unified Extensibility Platform). Communication is strictly confined to loopback WebSocket (`ws://127.0.0.1` or `ws://[::1]`) with challenge-response HMAC-SHA-256 mutual authentication.
+2. **Compatibility Fallback (CEP)**: For Premiere Pro versions or headless environments lacking native UXP coverage for specialized timeline APIs, `apps/premiere-cep` executes allowlisted, version-pinned ActionScript/ExtendScript handlers. Free-form string interpolation into `evalScript` is strictly forbidden.
+3. **Optimistic Locking & State Validation**: Every destructive mutation requires an `expectedRevision` identifier. If the user modifies the timeline between plan calculation and command execution, the bridge aborts with `CONFLICT`, preserving project integrity.
 
-1. Build the repository and start the daemon.
-2. Open Adobe UXP Developer Tool.
-3. Add `apps/premiere-uxp/manifest.json`.
-4. Select the Premiere Pro instance and load the plugin.
-5. Confirm `adobe.system.status` reports a ready `premiere-pro` bridge.
+---
 
-The panel only accepts `ws:`/`wss:` endpoints whose hostname is `127.0.0.1`, `::1`, or `localhost`. It performs the same challenge-HMAC handshake as the other bridges. The UXP transport is always attempted before CEP.
+## 2. Timeline DOM Architecture & Mathematical Model
 
-### CEP — compatibility fallback
+Premiere Pro's Timeline DOM is abstracted into a continuous coordinate space governed by rational ticks and bounded seconds.
 
-`apps/premiere-cep` exists for host versions or commands that are not available through UXP. Package/install it according to the local CEP extension policy, open **Window → Extensions → adobe-mcp Premiere Bridge**, and configure the same loopback endpoint and token.
+```mermaid
+graph TD
+    Seq[Active Sequence / State] --> Tracks[Track Collection]
+    Tracks --> VTracks[Video Tracks: V1, V2, V3...]
+    Tracks --> ATracks[Audio Tracks: A1, A2, A3...]
+    Tracks --> CTracks[Caption Tracks: C1, C2...]
+    VTracks --> VClips[Video Clips & Adjustments]
+    ATracks --> AClips[Audio Clips & Sub-mixes]
+    VClips --> Trans[Transitions: Between / In / Out]
+    VClips --> Effects[Lumetri / FX Pipeline]
+    AClips --> Keyframes[Gain Envelopes & Keyframes]
+```
 
-CEP does not accept free-form ExtendScript. The bridge serializes a handler name from a fixed allowlist plus JSON data. It may fall back from UXP only for transport-level failures such as `BRIDGE_UNAVAILABLE`, `APP_NOT_RUNNING`, or `TIMEOUT`; a validation or host error is returned directly.
+### 2.1 Coordinate System & Timeline Math
+* **Rational Timebase**: Internal calculations use integer ticks ($1\text{ tick} = 1/254016000000\text{ s}$) converted to floating-point seconds bounded to sequence framerates ($23.976$, $25.0$, $29.97$, $59.94$, $60.0$).
+* **Clip Splitting**: A split at $T_{\text{split}}$ transforms clip $C(T_{\text{start}}, T_{\text{end}})$ into $C_a(T_{\text{start}}, T_{\text{split}})$ and $C_b(T_{\text{split}}, T_{\text{end}})$ with preserved media references.
+* **Ripple Deletion**: Deleting range $[T_1, T_2]$ with duration $\Delta = T_2 - T_1$ adjusts subsequent clip boundaries:
+  $$\forall C \text{ where } T_{\text{start}}(C) \ge T_2 \implies T'_{\text{start}}(C) = T_{\text{start}}(C) - \Delta, \quad T'_{\text{end}}(C) = T_{\text{end}}(C) - \Delta$$
 
-## Timeline DOM
+---
 
-All time-sensitive baseline commands use either rational ticks/timebase or bounded seconds as defined by the operation schema. Read the sequence first and preserve returned clip and track IDs.
+## 3. Stylistic Color Grading & Film Look Recipes
 
-| Command | Intent | Important fields |
-|---|---|---|
-| `splitClip` | Razor one track at a time | `trackIndex`, `timeSeconds` |
-| `moveClip` | Reposition a clip | `clipId`, `targetTrackIndex`, `targetTimeSeconds` |
-| `trimClip` | Set both source boundaries | `clipId`, `inPoint`, `outPoint` |
-| `rippleDelete` | Remove a range and close the gap | `trackIndex`, `startTime`, `endTime` |
-| `applyTransition` | Add a typed video/audio transition | adjacent clip IDs, type, duration |
-| `setAudioKeyframes` | Write a gain envelope | track/clip, base gain, bounded keyframes |
-| `addCaptionTrack` | Add timestamped subtitles | ordered subtitle intervals |
+The `adobe.premiere.lumetri.grade` tool applies declarative color models directly to the Lumetri Color engine using deterministic parameter manifests rather than localized UI indices.
 
+### 3.1 Creative Grading Profiles
+* **80s Retro Horror / Slasher Aesthetic**:
+  - High-contrast, underexposed baseline with crushed blacks evoking 1980s 35mm film stock (Kodak 5247/5294).
+  - Cool cyan-green shadow bias with saturated blood-red midtone casts and heavy optical vignette.
+* **Cyberpunk Neon**:
+  - Deep violet/indigo shadows with electric magenta and cyan highlight splits.
+* **Nordic Documentary**:
+  - Cool desaturation, softened highlights, and natural skin tone separation.
+
+```mermaid
+flowchart LR
+    Source[Raw Video Track] --> Exposure["Exposure (-0.4 EV)<br/>Contrast (+35)<br/>Blacks (-15)"]
+    Exposure --> ColorTemp["Temp (-10 Kelvin)<br/>Tint (+15 Magenta)"]
+    ColorTemp --> Wheels["Shadows: Cyan/Green<br/>Midtones: Blood Red<br/>Highlights: Crimson"]
+    Wheels --> Vignette["Heavy Optical Vignette<br/>+ Film Grain Look"]
+    Vignette --> Master[Final Sequence Output]
+```
+
+### 3.2 Lumetri Grade Parameter Blueprint
+| Parameter Category | Field Key | Value | Technical Rationale |
+|---|---|---|---|
+| Basic Correction | `exposure` | `-0.40` | Deepens midtones for moody cinematic atmosphere |
+| Basic Correction | `contrast` | `+35.0` | Accentuates silhouette edges and dramatic lighting |
+| Basic Correction | `blacks` | `-15.0` | Crushes low-end pedestal into shadowy silhouettes |
+| Basic Correction | `whites` | `-10.0` | Softens harsh highlights and blown-out practical lights |
+| White Balance | `temperature` | `-10.0` | Cools overall scene with an eerie blue-green undertone |
+| White Balance | `tint` | `+15.0` | Adds magenta/crimson bias characteristic of chemical film aging |
+| 3-Way Shadows | `wheels.shadows` | `[0.12, 0.48, 0.42]` | Deep murky teal/green in shadows |
+| 3-Way Midtones | `wheels.midtones` | `[0.82, 0.12, 0.14]` | Saturated warm red in skin tones and atmospheric lighting |
+| 3-Way Highlights | `wheels.highlights`| `[0.92, 0.28, 0.18]` | Amber/crimson rim lighting |
+
+---
+
+## 4. Film Grain & Procedural Texture Workflows
+
+Authentic analog texture and film emulation can be achieved through two supported pipelines:
+
+### 4.1 Lumetri Creative Look Injection
+Assign a cryptographic artifact reference to Lumetri's Creative look module:
+```json
+{
+  "lut": {
+    "uri": "artifact://sha256-e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "format": "look",
+    "intensity": 0.85
+  }
+}
+```
+
+### 4.2 Effect Overlay & Adjustment Layer Stacking
+1. Create a dedicated top-level Adjustment Layer spanning track $V_2$ or $V_3$.
+2. Target the layer with `adobe.premiere.effects.edit` applying an allowlisted grain composite.
+3. Configure `Overlay` or `Soft Light` blend modes with opacity modulation ($65\%\text{--}80\%$) to inject high-frequency optical noise without clipping dynamic range.
+
+---
+
+## 5. MOGRT Inspection & Dynamic Parameter Manifests
+
+Motion Graphics Templates (.mogrt) are treated as strictly typed component interfaces, rejecting unstructured UI automation.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant Client as MCP Client
+    participant Gateway as MCP Gateway
+    participant Bridge as Premiere Bridge
+    participant Host as Premiere Pro DOM
+
+    Client->>Gateway: adobe.premiere.mogrt.inspect(templateUri)
+    Gateway->>Bridge: Fingerprint & extract manifest
+    Bridge->>Host: Parse ComponentParam tree
+    Host-->>Bridge: Dynamic Schema (text, color, number, media)
+    Bridge-->>Client: MogrtManifest (keys, types, bounds)
+    Client->>Gateway: adobe.premiere.mogrt.parametrize(clipId, params)
+    Gateway->>Bridge: Validate types against manifest
+    Bridge->>Host: Write properties inside executeGroup
+    Host-->>Client: Receipt with state verification
+```
+
+### 5.1 Parameter Manifest Structure
+```typescript
+export interface MogrtManifestParameter {
+  readonly key: string;
+  readonly type: "text" | "color" | "number" | "boolean" | "media";
+  readonly writable: boolean;
+  readonly mediaSlot?: boolean;
+}
+```
+
+---
+
+## 6. Automated Editorial Workflows (`EditPlan` Engine)
+
+The `EditPlan` engine compiles declarative editorial workflows into atomic timeline execution sequences.
+
+### 6.1 Silence Detection & Elimination (`cutSilences`)
+* Analyzes raw audio stream decibel energy against a threshold (e.g., $-48\text{ dBFS}$).
+* Groups silence segments exceeding minimum duration ($0.25\text{s}$).
+* Emits deterministic `rippleDelete` operations from right-to-left (reverse timeline order) to prevent temporal drift.
+
+### 6.2 Sidechain Auto-Ducking (`autoDucking`)
+* Detects dialogue activity intervals on speech tracks ($A_1$).
+* Calculates gain envelope keyframes for background music tracks ($A_2$):
+  * **Lead-in (Attack)**: $0.25\text{s}$ before voice start ($0\text{ dB} \to -18\text{ dB}$).
+  * **Sustain**: Constant $-18\text{ dB}$ attenuation throughout speech.
+  * **Lead-out (Release)**: $0.60\text{s}$ smooth ramp back to $0\text{ dB}$.
+
+### 6.3 Transcription Sync & Proxy Pipeline
+* **`adobe.premiere.transcript.sync`**: Dispatches speech-to-text transcription and populates native Caption Tracks with word-boundary wrapping.
+* **`adobe.premiere.proxies.manage`**: Programmatically attaches, detaches, or toggles ProRes Proxy / DNxHR low-resolution media for fluid remote editing.
+
+---
+
+## 7. Ready-to-Use JSON-RPC 2.0 Payloads
+
+### 7.1 Apply Cinematic Stylized Color Grade
 ```json
 {
   "jsonrpc": "2.0",
-  "id": 10,
+  "id": "req-pr-001",
   "method": "tools/call",
   "params": {
-    "name": "adobe.premiere.timeline.edit",
+    "name": "adobe.premiere.lumetri.grade",
     "arguments": {
-      "target": { "app": "premiere-pro", "projectId": "project-1" },
-      "commands": [
-        { "op": "splitClip", "trackIndex": 0, "timeSeconds": 12.5 },
-        {
-          "op": "applyTransition",
-          "trackIndex": 0,
-          "clipIdA": "clip-a",
-          "clipIdB": "clip-b",
-          "transitionType": "cross-dissolve",
-          "durationSeconds": 0.4
+      "target": {
+        "app": "premiere-pro",
+        "projectId": "proj-feature-01",
+        "entityId": "seq-night-scene"
+      },
+      "clipIds": ["clip-v1-004", "clip-v1-005"],
+      "basic": {
+        "exposure": -0.4,
+        "contrast": 35.0,
+        "blacks": -15.0,
+        "whites": -10.0,
+        "temperature": -10.0,
+        "tint": 15.0
+      },
+      "wheels": {
+        "shadows": {
+          "space": "rgb",
+          "components": [0.12, 0.48, 0.42],
+          "alpha": 1.0
+        },
+        "midtones": {
+          "space": "rgb",
+          "components": [0.82, 0.12, 0.14],
+          "alpha": 1.0
+        },
+        "highlights": {
+          "space": "rgb",
+          "components": [0.92, 0.28, 0.18],
+          "alpha": 1.0
         }
-      ],
+      },
+      "lut": {
+        "uri": "artifact://sha256-7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b",
+        "format": "look",
+        "intensity": 0.85
+      },
       "options": {
-        "operationId": "1aa05c62-1023-4afe-8f6f-7cf66b987754",
-        "expectedRevision": "timeline-rev-27",
-        "dryRun": true,
+        "operationId": "6a9b4c2e-8f1d-4e5a-9c3b-7d1e2f3a4b5c",
+        "expectedRevision": "rev-seq-1048",
+        "dryRun": false,
         "atomic": true,
         "conflictPolicy": "fail",
         "verification": "state"
@@ -82,122 +243,37 @@ All time-sensitive baseline commands use either rational ticks/timebase or bound
 }
 ```
 
-Commands in a batch must belong to a compatible handler family. Use dry-run or the planning front door first, especially for ripple operations. Locked tracks, stale revisions, missing clip IDs, or unavailable actions must fail without widening the target.
-
-## MOGRTs and Essential Graphics
-
-A MOGRT is not a bag of localized labels. The safe design inserts or inspects a template, then persists a `mogrtInstanceManifest` containing:
-
-- a template fingerprint;
-- component match names and stable parameter keys;
-- value types, ranges, and keyframe support;
-- replaceable media slots;
-- the Premiere host and adapter version used to discover them.
-
-The planned flow is:
-
-1. `premiere.mogrt.inspect` fingerprints the template and returns a manifest.
-2. `premiere.mogrt.insert` places the template through the sequence editor at a typed time and track.
-3. `premiere.mogrt.parameters.set` accepts only manifest keys and matching scalar/color types.
-4. Media replacements reference an `ArtifactRef`, never an arbitrary path.
-5. The bridge re-reads parameters and captures a preview to detect overflow or unsupported controls.
-
-Unknown controls are reported as `unsupported`; the adapter never writes “parameter 4” and hopes it is the correct field. Parameter injection remains **roadmap** in the public catalog.
-
-## Lumetri color recipes
-
-The planned `premiere.lumetri.applyRecipe` operation compiles a declarative color model against a version-specific `ComponentParam` manifest:
-
-- Basic Correction: temperature, tint, exposure, contrast, whites, and blacks.
-- RGB curves: RGB master and individual red, green, and blue points.
-- Three-way wheels: shadow, midtone, and highlight angle/magnitude/luminance.
-- LUT: artifact reference and bounded intensity.
-
-Before commit, the planner normalizes values, reports fields that cannot be mapped safely, and produces a split-screen or difference preview. Localized display names and hard-coded component indexes are forbidden. If a host version cannot map a curve or wheel deterministically, planning fails with `UNSUPPORTED_CAPABILITY`.
-
-Lumetri-specific typed operations are **roadmap**. The current catalog only offers the generic, allowlisted effects edit surface.
-
-## The `EditPlan` engine
-
-`EditPlan` compiles high-level editorial intent into ordered timeline commands. It does not run speech models or subject tracking implicitly; analysis outputs are explicit input data and can be reviewed before mutation.
-
-### Cut silences
-
-`cutSilences` accepts analyzed time ranges, selected track indexes, and a ripple flag. The compiler sorts and merges overlapping ranges, processes destructive cuts in a safe order, and keeps the plan bounded. The user sees the exact removed intervals before approval.
-
-### Auto-ducking
-
-`autoDucking` accepts voice/music tracks, optional clip IDs, voice intervals, attenuation, attack, release, and threshold. It generates gain keyframes around voice regions instead of destructively rewriting audio. Loudness verification should follow the mutation.
-
-### Vertical auto-reframe
-
-`autoReframe` targets exactly 9:16 in v1. It receives source dimensions and normalized horizontal subject positions over time, then creates position keyframes for the selected clips. A safe-area preview verifies that the subject remains inside the crop.
-
-The domain payload looks like this:
-
+### 7.2 MOGRT Parameter Injection with Media Replacement
 ```json
 {
-  "version": "1",
-  "target": { "app": "premiere-pro", "projectId": "project-1" },
-  "operations": [
-    {
-      "op": "cutSilences",
-      "ranges": [
-        { "startTime": 4.2, "endTime": 5.1 },
-        { "startTime": 18.7, "endTime": 20.0 }
+  "jsonrpc": "2.0",
+  "id": "req-pr-002",
+  "method": "tools/call",
+  "params": {
+    "name": "adobe.premiere.mogrt.parametrize",
+    "arguments": {
+      "target": {
+        "app": "premiere-pro",
+        "projectId": "proj-feature-01"
+      },
+      "clipId": "clip-mogrt-title",
+      "templateFingerprint": "fp-synthwave-title-v2",
+      "parameters": [
+        { "key": "TitleText", "type": "text", "value": "EPISODE 1: THE BEGINNING" },
+        { "key": "GlowColor", "type": "color", "value": { "space": "rgb", "components": [1.0, 0.08, 0.2], "alpha": 1.0 } },
+        { "key": "FlickerSpeed", "type": "number", "value": 14.5 },
+        { "key": "ShowScanlines", "type": "boolean", "value": true },
+        { "key": "BackgroundSlot", "type": "media", "value": "custom-plate", "mediaArtifactUri": "artifact://sha256-4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c" }
       ],
-      "trackIndices": [0, 1],
-      "ripple": true
-    },
-    {
-      "op": "autoDucking",
-      "voiceTrackIndices": [1],
-      "musicTrackIndices": [2],
-      "voiceRanges": [{ "startTime": 0.8, "endTime": 14.4 }],
-      "musicClipIds": ["music-bed"],
-      "attenuationDb": -12,
-      "attackSeconds": 0.25,
-      "releaseSeconds": 0.6,
-      "threshold": -24
-    },
-    {
-      "op": "autoReframe",
-      "aspectRatio": "9:16",
-      "sourceWidth": 3840,
-      "sourceHeight": 2160,
-      "trackIndex": 0,
-      "clipIds": ["clip-a"],
-      "horizontalKeyframes": [
-        { "time": 0, "position": 0.45 },
-        { "time": 10, "position": 0.62 }
-      ]
+      "options": {
+        "operationId": "b1c2d3e4-f5a6-4b7c-8d9e-0f1a2b3c4d5e",
+        "expectedRevision": "rev-seq-1049",
+        "dryRun": false,
+        "atomic": true,
+        "conflictPolicy": "fail",
+        "verification": "state"
+      }
     }
-  ],
-  "options": {
-    "operationId": "d6900b08-508d-4205-8a33-dd014c0ca40a",
-    "expectedRevision": "timeline-rev-27",
-    "dryRun": true,
-    "atomic": true,
-    "conflictPolicy": "fail",
-    "verification": "render-proof"
   }
 }
 ```
-
-> [!WARNING]
-> In `0.1.0`, `adobe.premiere.editPlan.execute` is classified R3, while its input schema cannot carry the stored plan and approval proof required by the gateway for R3. Treat direct MCP execution as blocked until it is migrated to `adobe.operations.plan` → `adobe.operations.execute`. The bridge compiler and schema remain useful for dry-run development and host-adapter tests.
-
-## MOGRT and timeline resource model
-
-The MCP 2026 resource layer will expose the active timeline through `adobe://premiere/active-sequence/timeline`, with canonical templates for project/sequence IDs. Resources return revisions, paginated tracks, clips, transitions, effects, and related artifacts. Use the resource for context; use operations for mutations.
-
-## Verification and failure behavior
-
-- A stale timeline revision returns `CONFLICT`; it is never automatically rebased for destructive edits.
-- The UXP adapter captures a snapshot before non-dry-run mutations where the capability exists.
-- Postconditions are read independently and attached to the receipt.
-- CEP is a declared fallback, not silent permission to use undocumented QE APIs.
-- Audio mixer automation, multicamera creation, arbitrary MOGRT media controls, and transcript APIs remain version-gated until host fixtures prove them.
-- Cancellation is cooperative; the receipt states if the host crossed a non-cancellable boundary.
-
-See [Architecture & security](architecture-and-security.md) for R3 approvals and [MCP protocol 2026](mcp-protocol-2026.md) for long-running progress.

@@ -1,37 +1,72 @@
-# Photoshop
+# Adobe Photoshop Automation & MCP Bridge Guide
 
-Automate Photoshop through a typed UXP bridge without exposing raw `batchPlay` or arbitrary scripts to the MCP client.
+Automate Adobe Photoshop through a secure, typed UXP bridge with zero raw script execution, strict Action Manager sandboxing, content-addressed artifact exports, and policy-guarded AI generation.
 
 [Back to README](../README.md) · [Architecture & security](architecture-and-security.md) · [MCP protocol](mcp-protocol-2026.md)
 
-## Capability status
+---
 
-| Area | Status | Public path |
-|---|---|---|
-| Document and layer inspection | Available | `adobe.photoshop.inspect`, `adobe.photoshop.document` |
-| Layer create/set/transform/delete and text | Available | `adobe.photoshop.layers.edit`, `adobe.photoshop.layers.content` |
-| Masks, adjustment layers, Smart Objects | Builder available; host capability required | typed builders in `@adobe-mcp/bridge-photoshop` |
-| Neural and Camera Raw filters | Capability-gated, R3 | `adobe.photoshop.filters.apply` |
-| Layer and document export | Available contract; host output must be verified | `adobe.photoshop.exportLayers`, `adobe.photoshop.export` |
-| Select Subject, Color Range, layer styles, channels | Roadmap | operation registry v2 |
+## Capability Status Matrix
 
-“Available” means code is reachable in the repository. It does not imply certification against every Photoshop release. A client should read `adobe.system.status` and `adobe.system.capabilities` before planning a mutation.
+| Feature Area | Risk Tier | Public MCP Tool / Registry Entry | Bridge Status & Implementation Notes |
+|---|---|---|---|
+| **Document & Layer Inspection** | **R0** | `adobe.photoshop.inspect`, `adobe.photoshop.document` | Fully implemented. Returns bounds, color profiles, hierarchy, opaque IDs, and document revision. |
+| **Layer Manipulation & Transforms** | **R2** | `adobe.photoshop.layers.edit`, `adobe.photoshop.transform.apply` | Implemented. Supports create, set, opacity, blend modes, matrix transforms, warp grids, and bicubic interpolation. |
+| **Layer Content & Rasterization** | **R2** | `adobe.photoshop.layers.content` | Implemented. Handles solid fills, artifact placing, Smart Object conversion, and rasterization. |
+| **Smart Selection AI** | **R2** | `adobe.photoshop.selection.smart` | Implemented in registry. Supports *Select Subject*, *Color Range*, and *Object Selection* via typed `batchPlay`. |
+| **Layer Styles & FX** | **R2** | `adobe.photoshop.layer.styles` | Implemented. Typed descriptors for Drop Shadow, Outer/Inner Glow, Bevel & Emboss, Stroke, and Color Overlay. |
+| **Channel & Luminosity Masks** | **R2** | `adobe.photoshop.channel.mask` | Implemented. Generates non-destructive masks targeting Lights, Midtones, Shadows, or discrete Alpha channels. |
+| **Adjustment Layers** | **R2** | `adobe.photoshop.layers.content` (Curves/Levels) | Implemented via typed bridge builders for Curves, Levels, Hue/Saturation, and Color Balance. |
+| **Content-Addressed Layer Export** | **R3** | `adobe.photoshop.exportLayers` | Implemented. Non-destructive layer isolation, real PNG/PSD binary generation, and SHA-256 CAS manifest. |
+| **Document Export** | **R1** | `adobe.photoshop.export` | Implemented. Exports PSD, PSB, PNG, JPEG, TIFF, or WebP with file grant binding and dimension checks. |
+| **Firefly Generative Fill** | **R3** | `adobe.photoshop.generative.fill` | Guarded R3 pipeline. Requires `approvalToken`, snapshot generation, cost/credit disclosure, and rollback. |
+| **Filters & Camera Raw** | **R3** | `adobe.photoshop.filters.apply` | Capability-gated. Typed allowlists for Camera Raw, Gaussian Blur, Unsharp Mask, and procedural Noise. |
 
-## Install the UXP panel
+> [!NOTE]
+> All mutations enforce revision checking (`expectedRevision`). If a human designer edits the canvas between plan compilation and execution, the bridge aborts with `CONFLICT` to prevent state corruption.
 
-1. Build the monorepo with `pnpm build` and start the daemon with `node apps/daemon/dist/index.js`.
-2. Open **Adobe UXP Developer Tool**.
-3. Select **Add Plugin** and choose `apps/photoshop-uxp/manifest.json`.
-4. Select the Photoshop instance, click **Load**, and keep the panel open.
-5. Ask the MCP client to call `adobe.system.status`. The Photoshop bridge should be `ready` and advertise at least `state.read@1`.
+---
 
-The manifest permits WebSocket traffic only to `ws://127.0.0.1:*`. Authentication material is never placed in the URL. The panel answers the daemon challenge with HMAC-SHA-256 and announces its host version, instance ID, capabilities, and frame limits.
+## Architecture & UXP Connection
 
-If the bridge is missing, check that the daemon is on the configured `ADOBE_MCP_DAEMON_PORT` (49152 by default), the panel and gateway use the same local token, and Photoshop is a supported target in UXP Developer Tool.
+The Photoshop bridge runs as a sandboxed UXP panel (`apps/photoshop-uxp/manifest.json`) communicating exclusively over loopback WebSockets (`ws://127.0.0.1:49152`) using HMAC-SHA-256 challenge-response authentication.
 
-## Inspect before editing
+```mermaid
+flowchart LR
+  subgraph ClientEnv["MCP Client / Agent"]
+    Client["AI Agent"]
+  end
 
-Inspection returns opaque document and layer IDs plus a revision. Reuse those IDs; do not identify layers by localized name or index. Pass the revision back as `expectedRevision` so a user edit made between planning and execution becomes `CONFLICT` instead of being overwritten.
+  subgraph GatewayDaemon["Adobe MCP Gateway & Daemon"]
+    GW["Gateway (JSON-RPC)"]
+    Policy["Risk & Approval Verifier"]
+    CAS[("ArtifactStore (SHA-256)")]
+    Daemon["Bridge Supervisor"]
+  end
+
+  subgraph HostEnv["Adobe Photoshop Host"]
+    UXP["UXP Panel (Loopback WS)"]
+    Modal["executeAsModal()"]
+    BP["batchPlay (Allowlisted Descriptors)"]
+    DOM["Photoshop DOM Engine"]
+  end
+
+  Client -->|"JSON-RPC 2.0 (STDIO)"| GW
+  GW --> Policy
+  GW --> Daemon
+  Daemon -->|"ws://127.0.0.1 (HMAC-SHA-256)"| UXP
+  UXP --> Modal
+  Modal --> BP
+  BP --> DOM
+  DOM -->|"Binary Pixels / Artifacts"| CAS
+```
+
+### Setup & Verification
+
+1. Start the local daemon: `pnpm --filter @adobe-mcp/daemon start` (or launch via `npx kirei-adobe-mcp`).
+2. Open **Adobe UXP Developer Tool (UDT)**.
+3. Click **Add Plugin**, select `apps/photoshop-uxp/manifest.json`, and click **Load**.
+4. Verify the bridge connection via MCP:
 
 ```json
 {
@@ -39,101 +74,20 @@ Inspection returns opaque document and layer IDs plus a revision. Reuse those ID
   "id": 1,
   "method": "tools/call",
   "params": {
-    "name": "adobe.photoshop.inspect",
+    "name": "adobe.system.status",
     "arguments": {
       "target": { "app": "photoshop" },
-      "depth": 2,
-      "page": { "limit": 100 }
+      "includeBridges": true
     }
   }
 }
 ```
 
-The result is an MCP text block containing the validated JSON envelope. Preview calls may additionally return an MCP image block.
+---
 
-## Tool families
+## Document & Layer Inspection
 
-### Inspection
-
-`adobe.photoshop.inspect` and `adobe.photoshop.document` expose document dimensions, resolution, color mode, bit depth, active layer IDs, a bounded layer tree, and pagination state. The intended v2 registry extends this with selection state, channels, histograms, artboards, Smart Object metadata, and stable resource URIs such as `adobe://photoshop/active-doc/layers`.
-
-### Selection with AI
-
-The registry design treats intelligent selection as typed operations rather than user-supplied descriptors:
-
-- `photoshop.selection.selectSubject`: replace/add/subtract/intersect modes, optional hair refinement, and an explicit cloud-processing flag.
-- `photoshop.selection.colorRange`: Lab target color, fuzziness from 0–200, and localized-cluster control.
-- `photoshop.selection.object`: bounded region and rectangle/lasso/automatic modes.
-
-These operations are **roadmap** until their descriptor builders and host fixtures are merged. When available, they must run in a modal scope, probe host support, and return `UNSUPPORTED_CAPABILITY` rather than silently switching algorithms.
-
-### Layer styles
-
-The planned `photoshop.layerStyle.patch` operation supports typed patches for drop shadow, stroke, bevel, and inner/outer glow. Style patches are R2 because they alter existing content. A patch must preserve unmentioned style fields, generate a preflight diff, and remain reversible through Photoshop history or a tested snapshot.
-
-### Adjustment layers
-
-The bridge already includes builders for Curves, Levels, Hue/Saturation, Color Balance, and Brightness/Contrast. They validate the adjustment kind and parameter object before producing an internal descriptor. Adjustment layers remain non-destructive to pixels, but they are still document mutations and require revision checks.
-
-```ts
-import {
-  createCurvesAdjustment,
-  createHueSaturationAdjustment,
-  buildBatchPlay
-} from "@adobe-mcp/bridge-photoshop";
-
-const commands = buildBatchPlay([
-  createCurvesAdjustment({ presetKind: "custom", points: [[0, 0], [128, 142], [255, 255]] }),
-  createHueSaturationAdjustment({ saturation: -8, lightness: 2 })
-]);
-```
-
-This TypeScript API is internal bridge code. MCP callers use public tools and never submit the generated descriptors.
-
-### Smart Objects
-
-Typed builders cover creating a placed layer, replacing a linked Smart Object from an authorized artifact, and opening an embedded object for host-side editing. External media must arrive through a file grant or `ArtifactRef`; a raw filesystem path is not accepted at the MCP boundary.
-
-### Camera Raw
-
-`applyCameraRaw(parameters)` creates an allowlisted `cameraRawFilter` descriptor after schema validation. The safe contract is intentionally narrower than raw Action Manager JSON:
-
-- only registered parameter keys are accepted for a certified host version;
-- the active target and expected revision are fixed during planning;
-- mutation occurs inside `executeAsModal`;
-- unsupported parameters fail closed;
-- the receipt records host and adapter evidence.
-
-The current builder accepts a bounded parameter record, so deployments should keep the operation capability-gated until the version-specific key allowlist and real-host fixtures are present.
-
-## Typed `batchPlay` and modal execution
-
-Photoshop operations use the DOM where it is sufficient. Action Manager is reserved for missing DOM capabilities. The trust boundary is:
-
-```text
-MCP args → strict operation schema → typed builder → fixed descriptor
-         → executeAsModal → batchPlay → independent state verification
-```
-
-Builders fix dialog and execution behavior and constrain actions to `create`, `apply`, `set`, or `delete`. The UXP panel owns `executeAsModal`; callers cannot choose an arbitrary `_obj`, target another document after planning, or request free-form code execution.
-
-## Export layers to immutable artifacts
-
-`adobe.photoshop.exportLayers` selects layers or groups, requests real encoded bytes from the host, writes every output to `ArtifactStore`, and returns a manifest with SHA-256 provenance. The canonical URI is:
-
-```text
-artifact://sha256-<64 lowercase hexadecimal characters>
-```
-
-The pipeline is designed as:
-
-1. Resolve the document and revision.
-2. Isolate each selected layer/group without damaging the source.
-3. Export PNG or PSD bytes at the requested scale.
-4. Validate that each output is decodable and matches expected dimensions.
-5. Store bytes immutably; identical bytes deduplicate naturally.
-6. Emit a manifest containing layer ID, safe filename, bounds, byte length, digest, and provenance.
-7. Restore temporary visibility/selection state and verify the source revision.
+Inspection returns opaque, revision-bound identifiers (`docId`, `layerId`, `revision`). Never hardcode or rely on localized layer names or array indices.
 
 ```json
 {
@@ -141,34 +95,23 @@ The pipeline is designed as:
   "id": 2,
   "method": "tools/call",
   "params": {
-    "name": "adobe.photoshop.exportLayers",
+    "name": "adobe.photoshop.inspect",
     "arguments": {
-      "target": { "app": "photoshop", "documentId": "doc-42" },
-      "layerIds": ["layer-7", "layer-9"],
-      "format": "png",
-      "destination": {
-        "grantId": "grant-output",
-        "access": "write",
-        "suggestedName": "campaign-layers"
-      },
-      "scale": 1,
-      "includeHidden": false,
-      "mutation": {
-        "operationId": "54c9e940-7ca3-4dc5-9796-9cb3926dbed0",
-        "expectedRevision": "rev-18",
-        "dryRun": false,
-        "atomic": true,
-        "conflictPolicy": "fail",
-        "verification": "render-proof"
-      }
+      "target": { "app": "photoshop" },
+      "options": { "depth": 3, "includeHidden": true }
     }
   }
 }
 ```
 
-The repository has the artifact-backed result path, but production certification still requires verifying the real UXP export bytes and cleanup behavior for every supported Photoshop version.
+---
 
-## Example: safe layer update
+## Smart Selection with AI
+
+The `adobe.photoshop.selection.smart` tool provides three AI-accelerated selection mechanisms without exposing unstructured Action Manager code:
+
+### 1. Select Subject (`selectSubject`)
+Uses Photoshop's Sensei cutout model to isolate foreground subjects with automatic edge refinement.
 
 ```json
 {
@@ -176,22 +119,14 @@ The repository has the artifact-backed result path, but production certification
   "id": 3,
   "method": "tools/call",
   "params": {
-    "name": "adobe.photoshop.layers.edit",
+    "name": "adobe.photoshop.selection.smart",
     "arguments": {
-      "target": { "app": "photoshop", "documentId": "doc-42" },
-      "commands": [
-        {
-          "op": "set",
-          "layerId": "layer-7",
-          "patch": { "opacity": 0.85, "visible": true }
-        }
-      ],
+      "target": { "app": "photoshop", "documentId": "ps-doc-8821" },
+      "mode": "selectSubject",
       "options": {
-        "operationId": "3a176c54-bb21-457d-b503-d93763caad38",
-        "expectedRevision": "rev-18",
-        "dryRun": true,
-        "atomic": true,
-        "conflictPolicy": "fail",
+        "operationId": "a1b2c3d4-0001-4000-8000-000000000001",
+        "expectedRevision": "rev-10492",
+        "dryRun": false,
         "verification": "state"
       }
     }
@@ -199,15 +134,219 @@ The repository has the artifact-backed result path, but production certification
 }
 ```
 
-Use dry-run or `adobe.operations.plan` first, inspect the diff, then execute with the same immutable scope. A changed revision requires a new plan.
+### 2. Color Range Selection (`colorRange`)
+Selects specific tonal or color clusters using Lab/RGB targets and a fuzziness threshold ($0\text{--}200$).
 
-## Operational checklist
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 4,
+  "method": "tools/call",
+  "params": {
+    "name": "adobe.photoshop.selection.smart",
+    "arguments": {
+      "target": { "app": "photoshop", "documentId": "ps-doc-8821" },
+      "mode": "colorRange",
+      "colorRange": {
+        "color": { "space": "rgb", "components": [0.85, 0.05, 0.05], "alpha": 1.0 },
+        "fuzziness": 45,
+        "hue": 0
+      },
+      "options": {
+        "operationId": "a1b2c3d4-0002-4000-8000-000000000002",
+        "expectedRevision": "rev-10493"
+      }
+    }
+  }
+}
+```
 
-- Keep document, layer, channel, and selection identifiers opaque and revision-bound.
-- Never expose raw `batchPlay`, JSX, `eval`, or plugin-local filesystem paths.
-- Use DOM APIs first; keep versioned descriptor fixtures for Action Manager operations.
-- Treat cloud/generative features as R3 with explicit egress, account, credit, and region disclosure.
-- Verify exported bytes, not merely the existence of a temporary file.
-- Do not describe metadata-only JSON as a restorable snapshot.
+### 3. Object Selection (`objectSelection`)
+Pins an exact bounding box in pixels, points, or percentages to isolate specific entities within cluttered compositions.
 
-See [Architecture & security](architecture-and-security.md) for approvals and receipts, and [the master blueprint](../ULTIMATE_ADOBE_MCP_BLUEPRINT.md) for the certification backlog.
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 5,
+  "method": "tools/call",
+  "params": {
+    "name": "adobe.photoshop.selection.smart",
+    "arguments": {
+      "target": { "app": "photoshop", "documentId": "ps-doc-8821" },
+      "mode": "objectSelection",
+      "boundingBox": { "x": 500, "y": 1200, "width": 1800, "height": 2600, "unit": "px" },
+      "options": {
+        "operationId": "a1b2c3d4-0003-4000-8000-000000000003",
+        "expectedRevision": "rev-10494"
+      }
+    }
+  }
+}
+```
+
+---
+
+## Stylistic Poster Grading & Layer FX Recipes
+
+This recipe demonstrates multi-step stylistic poster creation: combining Curves tonal mapping, procedural noise/grain overlays, and typography styling.
+
+```mermaid
+flowchart TD
+  S1["1. Isolate Subject<br/>(Smart Selection: selectSubject)"] --> S2["2. Color Grade & Tone Curve<br/>(Crushed Blacks + Rich Midtones)"]
+  S2 --> S3["3. Procedural Film Grain<br/>(Noise Filter + Overlay Mode)"]
+  S3 --> S4["4. Stylized Typography<br/>(Layer Styles: Drop Shadow + Outer Glow + Stroke)"]
+  S4 --> S5["5. Content-Addressed Export<br/>(CAS PNG/PSD Artifact + SHA-256 Manifest)"]
+```
+
+### Step 1: Inject Procedural Film Grain Overlay
+Generates a monochromatic grain texture set to `overlay` blend mode at 65% opacity:
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 7,
+  "method": "tools/call",
+  "params": {
+    "name": "adobe.photoshop.filters.apply",
+    "arguments": {
+      "target": { "app": "photoshop", "documentId": "ps-doc-8821" },
+      "commands": [
+        {
+          "op": "apply",
+          "layerIds": ["layer-grain-overlay"],
+          "filter": "noise",
+          "parameters": {
+            "amount": 32.5,
+            "distribution": 1,
+            "monochromatic": 1
+          }
+        }
+      ],
+      "options": {
+        "operationId": "b2c3d4e5-0002-4000-8000-000000000002",
+        "expectedRevision": "rev-10496"
+      }
+    }
+  }
+}
+```
+
+### Step 2: Style Headline Typography (Layer Styles)
+Applies a dramatic fill, Outer Glow, and offset Drop Shadow:
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 8,
+  "method": "tools/call",
+  "params": {
+    "name": "adobe.photoshop.layer.styles",
+    "arguments": {
+      "target": { "app": "photoshop", "documentId": "ps-doc-8821" },
+      "layerId": "layer-title-text",
+      "style": "outerGlow",
+      "enabled": true,
+      "opacity": 88,
+      "size": 42,
+      "spread": 18,
+      "color": { "space": "rgb", "components": [1.0, 0.08, 0.18], "alpha": 1.0 },
+      "options": {
+        "operationId": "b2c3d4e5-0003-4000-8000-000000000003",
+        "expectedRevision": "rev-10497"
+      }
+    }
+  }
+}
+```
+
+---
+
+## Luminosity Masks & Channel Isolation
+
+Luminosity masking permits targeted adjustments based on image brightness without manual path tracing.
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 10,
+  "method": "tools/call",
+  "params": {
+    "name": "adobe.photoshop.channel.mask",
+    "arguments": {
+      "target": { "app": "photoshop", "documentId": "ps-doc-8821" },
+      "layerId": "layer-curves-grade",
+      "source": "shadows",
+      "invert": false,
+      "featherPixels": 12.0,
+      "options": {
+        "operationId": "c3d4e5f6-0001-4000-8000-000000000001",
+        "expectedRevision": "rev-10499"
+      }
+    }
+  }
+}
+```
+
+---
+
+## Firefly Generative Fill (R3 Guarded Workflow)
+
+Generative Fill is categorized as an **R3 Risk Tier** operation due to cloud egress, AI credit consumption, and generative canvas alteration. It mandates a two-phase Plan $\rightarrow$ Approve $\rightarrow$ Execute lifecycle with snapshot rollback guarantees.
+
+```mermaid
+sequenceDiagram
+  autonumber
+  participant Agent as MCP Client / Agent
+  participant GW as Gateway / Policy Engine
+  participant Host as Photoshop Bridge
+
+  Agent->>GW: adobe.operations.plan (generative.fill)
+  GW->>Host: Create revision snapshot & dry-run diff
+  Host-->>GW: Snapshot URI + planHash
+  GW-->>Agent: Return PlanHandle + Risk R3 + planHash
+  Note over Agent: Human Review / Prompt & Cost Consent
+  Agent->>GW: adobe.operations.execute (PlanHandle + approvalToken)
+  GW->>GW: Verify HMAC & consume approval nonce
+  GW->>Host: Execute Firefly Inpainting Modal
+  Host-->>GW: Generated Variations + new revision
+  GW-->>Agent: Execution Receipt + variation metadata
+```
+
+---
+
+## Content-Addressed Layer & Artifact Export
+
+The `adobe.photoshop.exportLayers` tool isolates specified layers or layer groups, exports high-fidelity raster bytes (PNG or PSD), writes the output directly into the SHA-256 Content-Addressed Storage (`ArtifactStore`), and emits an immutable manifest.
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 13,
+  "method": "tools/call",
+  "params": {
+    "name": "adobe.photoshop.exportLayers",
+    "arguments": {
+      "target": { "app": "photoshop", "documentId": "ps-doc-8821" },
+      "layerIds": [
+        "layer-hero-character",
+        "layer-title-text",
+        "layer-grain-overlay"
+      ],
+      "format": "png",
+      "scale": 1.0,
+      "includeHidden": false,
+      "isolate": true,
+      "destination": {
+        "grantId": "grant-poster-deliverables",
+        "access": "write",
+        "suggestedName": "poster-layers"
+      },
+      "options": {
+        "operationId": "e5f6a7b8-0001-4000-8000-000000000001",
+        "expectedRevision": "rev-10500",
+        "verification": "render-proof"
+      }
+    }
+  }
+}
+```

@@ -14,6 +14,8 @@ const AFTER_EFFECTS_PRESET_RESOURCES = [
   { id: "effect.fast-blur", name: "Fast Blur", matchName: "ADBE Fast Blur", category: "effect", recipe: { blur: 12 }, version: "1" },
   { id: "effect.curves", name: "Curves", matchName: "ADBE CurvesCustom", category: "effect", recipe: { channel: "RGB" }, version: "1" },
   { id: "effect.color-balance", name: "Color Balance", matchName: "ADBE Color Balance", category: "effect", recipe: { preserveLuminosity: true }, version: "1" },
+  { id: "effect.film-grain-80s", name: "80s Vintage 35mm Film Grain", matchName: "ADBE Noise", category: "effect", recipe: { amount: 18, useColorNoise: false }, version: "1" },
+  { id: "effect.vhs-chromatic-aberration", name: "VHS Chromatic Aberration & Glitch", matchName: "ADBE Shift Channels", category: "effect", recipe: { red: "red", green: "off", blue: "off" }, version: "1" },
   { id: "animation.wiggle", name: "Procedural Wiggle", matchName: "ADBE Wiggle", category: "animation", recipe: { expression: "wiggle(frequency, amplitude)" }, version: "1" },
   { id: "animation.inertial-bounce", name: "Inertial Bounce", matchName: "ADBE Expression", category: "animation", recipe: { expression: "inertialBounce(amp, freq, decay)" }, version: "1" },
   { id: "camera.orbital-3d", name: "Orbital 3D Camera", matchName: "ADBE Camera", category: "camera", recipe: { rig: "orbit", threeD: true }, version: "1" },
@@ -26,7 +28,9 @@ const PROMPTS = [
   { name: "reframe-tiktok", description: "Convert a 16:9 sequence to 9:16 vertical video with tracking and visual verification.", arguments: [{ name: "sequenceId", required: true }, { name: "target", required: false }] },
   { name: "podcast-cleanup", description: "Detect silences, apply auto-ducking, and execute declarative equalization.", arguments: [{ name: "sequenceId", required: true }, { name: "voiceTrackIndices", required: true }] },
   { name: "motion-graphic-bumper", description: "Compose an After Effects motion bumper with animated typography and 3D camera.", arguments: [{ name: "compId", required: true }, { name: "title", required: true }] },
-  { name: "brand-vectorize", description: "Vectorize a brand logo image and extract a global swatch palette.", arguments: [{ name: "imageArtifactUri", required: true }, { name: "preset", required: false }] }
+  { name: "brand-vectorize", description: "Vectorize a brand logo image and extract a global swatch palette.", arguments: [{ name: "imageArtifactUri", required: true }, { name: "preset", required: false }] },
+  { name: "80s-horror-grading", description: "Apply an authentic 80s retro horror color grade (crushed blacks, cold cyan shadows, blood-red highlights, heavy vignette, and 35mm grain).", arguments: [{ name: "clipIds", required: true }, { name: "grainIntensity", required: false }] },
+  { name: "film-grain-cinematic", description: "Add organic procedural 35mm or 16mm film grain and analog texture to video footage.", arguments: [{ name: "layerId", required: true }, { name: "grainType", required: false }] }
 ] as const;
 function dynamicResources(): readonly { uri: string; name: string; mimeType: "application/json" }[] {
   return [
