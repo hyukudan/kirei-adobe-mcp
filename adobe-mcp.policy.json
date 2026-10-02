@@ -1,0 +1,10 @@
+{
+  "apps": ["photoshop", "illustrator", "after-effects", "premiere-pro"],
+  "roots": [],
+  "formats": ["psd", "psb", "png", "jpeg", "tiff", "webp", "ai", "pdf", "svg", "eps", "aep", "mp4"],
+  "limits": { "maxPendingRequests": 100, "maxFrameBytes": 8388608, "maxEntities": 50, "maxFiles": 10, "maxBytes": 5368709120, "maxMinutes": 10 },
+  "risk": { "interactiveFrom": "R3", "denyUnattendedAt": "R4" },
+  "interaction": { "externalNetwork": false, "arbitraryExecution": false, "loopbackOnly": true },
+  "retention": { "snapshotsDays": 7, "logsDays": 30 },
+  "telemetry": "opt-in"
+}

@@ -1,0 +1,11 @@
+{
+  "name": "@adobe-mcp/photoshop-uxp",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/validate.mjs",
+    "test": "node scripts/validate.mjs",
+    "lint": "node scripts/validate.mjs"
+  }
+}

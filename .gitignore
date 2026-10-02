@@ -1,0 +1,14 @@
+node_modules/
+.pnpm-store/
+dist/
+coverage/
+.turbo/
+*.tsbuildinfo
+artifacts/
+.env
+.env.*
+!.env.example
+*.log
+adobe-mcp.policy.local.json
+
+reference_repos/

@@ -1,0 +1,12 @@
+{
+  "manifestVersion": 5,
+  "id": "com.adobe-mcp.premiere.uxp",
+  "name": "adobe-mcp Premiere Bridge",
+  "version": "0.1.0",
+  "main": "dist/index.js",
+  "host": { "app": "PPRO", "minVersion": "24.0" },
+  "requiredPermissions": {
+    "network": { "domains": ["127.0.0.1", "localhost"] },
+    "localFileSystem": "request"
+  }
+}

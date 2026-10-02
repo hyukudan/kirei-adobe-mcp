@@ -1,0 +1,12 @@
+{
+  "version": "1.0.0",
+  "handlers": ["inspect", "create-layer", "create-item", "transform", "delete", "export", "snapshot", "verify"],
+  "files": [
+    {
+      "file": "illustrator-bridge-1.0.0.jsx",
+      "sha256": "825f3fb4e504b188a186084fec183291c0750bb9a934aef44550539eb55bb5cf",
+      "version": "1.0.0",
+      "handlers": ["inspect", "create-layer", "create-item", "transform", "delete", "export", "snapshot", "verify"]
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "name": "@adobe-mcp/schemas",
+  "version": "0.1.0",
+  "type": "module",
+  "exports": { ".": "./dist/index.js", "./package.json": "./package.json" },
+  "scripts": { "build": "tsc -p tsconfig.json", "typecheck": "tsc -p tsconfig.json --noEmit", "test": "vitest run", "lint": "tsc -p tsconfig.json --noEmit", "schemas:generate": "node dist/generate.js", "schemas:check": "node dist/generate.js --check" },
+  "dependencies": { "zod": "^3.24.1", "zod-to-json-schema": "^3.24.1" },
+  "devDependencies": { "@types/node": "^22.10.2", "typescript": "^5.7.2", "vitest": "^2.1.8" }
+}

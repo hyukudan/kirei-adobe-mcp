@@ -1,0 +1,21 @@
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+import { zodToJsonSchema } from "zod-to-json-schema";
+import { AiDocumentState, AeCompState, AfterEffectsEditCommand, AfterEffectsPreset, AfterEffectsPresetApply, AfterEffectsPresetApplyResult, AfterEffectsRenderPlan, ApprovalToken, AppId, ArtifactMetadata, ArtifactRef, CapabilityDescriptor, Compensable, ErrorCode, FileGrant, IllustratorArtboardExport, IllustratorArtboardExportResult, IllustratorEditCommand, IllustratorTextSpec, IllustratorVectorOperation, Job, MutationOptions, NormalizedError, OperationReceipt, Plan, Preset, PremiereAutoDuckingPlan, PremiereAutoReframePlan, PremiereCutSilencesPlan, PremiereEditPlan, PremiereEditPlanResult, PremiereEffectCommand, PremiereMarkerCommand, PremiereProjectCommand, PremiereSequenceCommand, PremiereTimelineCommand, PremiereTimelineOperation, PsDocumentState, PhotoshopAdjustmentSpec, PhotoshopBatchPlayCommand, PhotoshopBatchPlayDescriptor, PhotoshopFilterSpec, PhotoshopLayerCommand, PhotoshopLayerExportResult, PhotoshopLayerExportSpec, PhotoshopLayerMaskSpec, PhotoshopSmartObjectSpec, RationalTime, ReadOptions, ResolvedFileGrant, SagaDefinition, Snapshot, TargetRef, VisualVerifyData, VisualVerifyInput, VisualVerifyOutput } from "./index.js";
+
+const outputFile = join(dirname(fileURLToPath(import.meta.url)), "../generated/manifest.json");
+const schemas = { AiDocumentState, AeCompState, AfterEffectsEditCommand, AfterEffectsPreset, AfterEffectsPresetApply, AfterEffectsPresetApplyResult, AfterEffectsRenderPlan, ApprovalToken, AppId, ArtifactMetadata, ArtifactRef, CapabilityDescriptor, Compensable, ErrorCode, FileGrant, IllustratorArtboardExport, IllustratorArtboardExportResult, IllustratorEditCommand, IllustratorTextSpec, IllustratorVectorOperation, Job, MutationOptions, NormalizedError, OperationReceipt, Plan, Preset, PremiereAutoDuckingPlan, PremiereAutoReframePlan, PremiereCutSilencesPlan, PremiereEditPlan, PremiereEditPlanResult, PremiereEffectCommand, PremiereMarkerCommand, PremiereProjectCommand, PremiereSequenceCommand, PremiereTimelineCommand, PremiereTimelineOperation, PsDocumentState, PhotoshopAdjustmentSpec, PhotoshopBatchPlayCommand, PhotoshopBatchPlayDescriptor, PhotoshopFilterSpec, PhotoshopLayerCommand, PhotoshopLayerExportResult, PhotoshopLayerExportSpec, PhotoshopLayerMaskSpec, PhotoshopSmartObjectSpec, RationalTime, ReadOptions, ResolvedFileGrant, SagaDefinition, Snapshot, TargetRef, VisualVerifyData, VisualVerifyInput, VisualVerifyOutput };
+function makeManifest(): string {
+  const manifest = Object.fromEntries(Object.entries(schemas).sort(([a], [b]) => a.localeCompare(b)).map(([name, schema]) => {
+    const json = zodToJsonSchema(schema, { target: "jsonSchema2019-09" }) as Record<string, unknown>;
+    return [name, { ...json, $schema: "https://json-schema.org/draft/2020-12/schema" }];
+  }));
+  return `${JSON.stringify(manifest, null, 2)}\n`;
+}
+const expected = makeManifest();
+if (process.argv.includes("--check")) {
+  try { process.exit(readFileSync(outputFile, "utf8") === expected ? 0 : 1); } catch { process.exit(1); }
+}
+mkdirSync(dirname(outputFile), { recursive: true });
+writeFileSync(outputFile, expected, "utf8");

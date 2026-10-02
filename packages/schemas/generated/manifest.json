@@ -1,0 +1,6826 @@
+{
+  "AeCompState": {
+    "type": "object",
+    "properties": {
+      "id": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 256
+      },
+      "revision": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 128
+      },
+      "name": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 512
+      },
+      "width": {
+        "type": "integer",
+        "exclusiveMinimum": true,
+        "minimum": 0
+      },
+      "height": {
+        "type": "integer",
+        "exclusiveMinimum": true,
+        "minimum": 0
+      },
+      "pixelAspect": {
+        "type": "number",
+        "exclusiveMinimum": true,
+        "minimum": 0
+      },
+      "frameRate": {
+        "type": "number",
+        "exclusiveMinimum": true,
+        "minimum": 0
+      },
+      "duration": {
+        "type": "object",
+        "properties": {
+          "ticks": {
+            "type": "string",
+            "pattern": "^-?\\d+$",
+            "maxLength": 32
+          },
+          "timebase": {
+            "type": "string",
+            "pattern": "^[1-9]\\d*$",
+            "maxLength": 12
+          }
+        },
+        "required": [
+          "ticks",
+          "timebase"
+        ],
+        "additionalProperties": false
+      },
+      "workArea": {
+        "type": "object",
+        "properties": {
+          "start": {
+            "$ref": "#/properties/duration"
+          },
+          "duration": {
+            "$ref": "#/properties/duration"
+          }
+        },
+        "required": [
+          "start",
+          "duration"
+        ],
+        "additionalProperties": false
+      },
+      "layers": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "$ref": "#/properties/id"
+            },
+            "index": {
+              "type": "integer",
+              "exclusiveMinimum": true,
+              "minimum": 0
+            },
+            "name": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 512
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "av",
+                "text",
+                "shape",
+                "camera",
+                "light",
+                "null",
+                "adjustment",
+                "unknown"
+              ]
+            },
+            "sourceId": {
+              "$ref": "#/properties/id"
+            },
+            "parentId": {
+              "anyOf": [
+                {
+                  "$ref": "#/properties/id"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "enabled": {
+              "type": "boolean"
+            },
+            "locked": {
+              "type": "boolean"
+            },
+            "threeD": {
+              "type": "boolean"
+            },
+            "inPoint": {
+              "$ref": "#/properties/duration"
+            },
+            "outPoint": {
+              "$ref": "#/properties/duration"
+            },
+            "startTime": {
+              "$ref": "#/properties/duration"
+            },
+            "selected": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "id",
+            "index",
+            "name",
+            "type",
+            "parentId",
+            "enabled",
+            "locked",
+            "threeD",
+            "inPoint",
+            "outPoint",
+            "startTime",
+            "selected"
+          ],
+          "additionalProperties": false
+        },
+        "maxItems": 10000
+      },
+      "truncated": {
+        "type": "boolean"
+      },
+      "nextCursor": {
+        "type": "string",
+        "maxLength": 2048
+      }
+    },
+    "required": [
+      "id",
+      "revision",
+      "name",
+      "width",
+      "height",
+      "pixelAspect",
+      "frameRate",
+      "duration",
+      "workArea",
+      "layers",
+      "truncated"
+    ],
+    "additionalProperties": false,
+    "$schema": "https://json-schema.org/draft/2020-12/schema"
+  },
+  "AfterEffectsEditCommand": {
+    "anyOf": [
+      {
+        "type": "object",
+        "properties": {
+          "op": {
+            "type": "string",
+            "const": "create-layer"
+          },
+          "tempId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "solid",
+              "text",
+              "shape",
+              "null",
+              "camera",
+              "light"
+            ]
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512
+          },
+          "options": {
+            "type": "object",
+            "additionalProperties": {},
+            "propertyNames": {
+              "maxLength": 128
+            },
+            "default": {}
+          }
+        },
+        "required": [
+          "op",
+          "tempId",
+          "kind",
+          "name"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "op": {
+            "type": "string",
+            "const": "set-property"
+          },
+          "layerId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "propertyPath": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            },
+            "minItems": 1,
+            "maxItems": 16
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 4096
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                },
+                "maxItems": 16
+              }
+            ]
+          }
+        },
+        "required": [
+          "op",
+          "layerId",
+          "propertyPath",
+          "value"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "op": {
+            "type": "string",
+            "const": "set-keyframes"
+          },
+          "layerId": {
+            "$ref": "#/anyOf/1/properties/layerId"
+          },
+          "propertyPath": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            },
+            "minItems": 1,
+            "maxItems": 16
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "merge",
+              "replace-range"
+            ]
+          },
+          "keyframes": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "time": {
+                  "type": "object",
+                  "properties": {
+                    "ticks": {
+                      "type": "string",
+                      "pattern": "^-?\\d+$",
+                      "maxLength": 32
+                    },
+                    "timebase": {
+                      "type": "string",
+                      "pattern": "^[1-9]\\d*$",
+                      "maxLength": 12
+                    }
+                  },
+                  "required": [
+                    "ticks",
+                    "timebase"
+                  ],
+                  "additionalProperties": false
+                },
+                "value": {
+                  "$ref": "#/anyOf/1/properties/value"
+                },
+                "interpolation": {
+                  "type": "string",
+                  "enum": [
+                    "linear",
+                    "bezier",
+                    "hold"
+                  ]
+                }
+              },
+              "required": [
+                "time",
+                "value",
+                "interpolation"
+              ],
+              "additionalProperties": false
+            },
+            "minItems": 1,
+            "maxItems": 5000
+          }
+        },
+        "required": [
+          "op",
+          "layerId",
+          "propertyPath",
+          "mode",
+          "keyframes"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "op": {
+            "type": "string",
+            "const": "delete-layer"
+          },
+          "layerIds": {
+            "type": "array",
+            "items": {
+              "$ref": "#/anyOf/1/properties/layerId"
+            },
+            "minItems": 1,
+            "maxItems": 500
+          },
+          "permanent": {
+            "type": "boolean",
+            "const": false,
+            "default": false
+          }
+        },
+        "required": [
+          "op",
+          "layerIds"
+        ],
+        "additionalProperties": false
+      }
+    ],
+    "$schema": "https://json-schema.org/draft/2020-12/schema"
+  },
+  "AfterEffectsPreset": {
+    "type": "object",
+    "properties": {
+      "id": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 256
+      },
+      "name": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 512
+      },
+      "matchName": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 256
+      },
+      "category": {
+        "type": "string",
+        "enum": [
+          "effect",
+          "animation",
+          "camera",
+          "tracking",
+          "render"
+        ]
+      },
+      "recipe": {
+        "type": "object",
+        "additionalProperties": {},
+        "propertyNames": {
+          "maxLength": 128
+        }
+      },
+      "version": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 64
+      }
+    },
+    "required": [
+      "id",
+      "name",
+      "matchName",
+      "category",
+      "recipe",
+      "version"
+    ],
+    "additionalProperties": false,
+    "$schema": "https://json-schema.org/draft/2020-12/schema"
+  },
+  "AfterEffectsPresetApply": {
+    "type": "object",
+    "properties": {
+      "target": {
+        "type": "object",
+        "properties": {
+          "app": {
+            "type": "string",
+            "enum": [
+              "photoshop",
+              "illustrator",
+              "after-effects",
+              "premiere-pro"
+            ]
+          },
+          "instanceId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "projectId": {
+            "$ref": "#/properties/target/properties/instanceId"
+          },
+          "documentId": {
+            "$ref": "#/properties/target/properties/instanceId"
+          },
+          "entityId": {
+            "$ref": "#/properties/target/properties/instanceId"
+          }
+        },
+        "required": [
+          "app"
+        ],
+        "additionalProperties": false
+      },
+      "presetId": {
+        "$ref": "#/properties/target/properties/instanceId"
+      },
+      "layerId": {
+        "$ref": "#/properties/target/properties/instanceId"
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": {},
+        "propertyNames": {
+          "maxLength": 128
+        },
+        "default": {}
+      },
+      "mutation": {
+        "type": "object",
+        "properties": {
+          "operationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "expectedRevision": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "dryRun": {
+            "type": "boolean",
+            "default": false
+          },
+          "atomic": {
+            "type": "boolean",
+            "default": true
+          },
+          "conflictPolicy": {
+            "type": "string",
+            "enum": [
+              "fail",
+              "rebase-safe"
+            ],
+            "default": "fail"
+          },
+          "verification": {
+            "type": "string",
+            "enum": [
+              "none",
+              "state",
+              "render-proof"
+            ],
+            "default": "state"
+          },
+          "approvalToken": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          },
+          "explicitConfirmation": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "operationId"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "required": [
+      "target",
+      "presetId",
+      "layerId",
+      "mutation"
+    ],
+    "additionalProperties": false,
+    "$schema": "https://json-schema.org/draft/2020-12/schema"
+  },
+  "AfterEffectsPresetApplyResult": {
+    "type": "object",
+    "properties": {
+      "applied": {
+        "type": "boolean",
+        "const": true
+      },
+      "presetId": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 256
+      },
+      "layerId": {
+        "$ref": "#/properties/presetId"
+      },
+      "modifiedProperties": {
+        "type": "array",
+        "items": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "maxItems": 500
+      }
+    },
+    "required": [
+      "applied",
+      "presetId",
+      "layerId",
+      "modifiedProperties"
+    ],
+    "additionalProperties": false,
+    "$schema": "https://json-schema.org/draft/2020-12/schema"
+  },
+  "AfterEffectsRenderPlan": {
+    "type": "object",
+    "properties": {
+      "projectPath": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 4096
+      },
+      "outputPath": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 4096
+      },
+      "comp": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 512
+      },
+      "segments": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "startFrame": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "endFrame": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "startFrame",
+            "endFrame"
+          ],
+          "additionalProperties": false
+        },
+        "minItems": 1,
+        "maxItems": 100
+      },
+      "operationId": {
+        "type": "string",
+        "format": "uuid"
+      }
+    },
+    "required": [
+      "projectPath",
+      "outputPath",
+      "segments"
+    ],
+    "additionalProperties": false,
+    "$schema": "https://json-schema.org/draft/2020-12/schema"
+  },
+  "AiDocumentState": {
+    "type": "object",
+    "properties": {
+      "id": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 256
+      },
+      "revision": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 128
+      },
+      "name": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 512
+      },
+      "saved": {
+        "type": "boolean"
+      },
+      "colorSpace": {
+        "type": "string",
+        "enum": [
+          "rgb",
+          "cmyk"
+        ]
+      },
+      "activeArtboardId": {
+        "$ref": "#/properties/id"
+      },
+      "artboards": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "$ref": "#/properties/id"
+            },
+            "name": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 512
+            },
+            "bounds": {
+              "type": "object",
+              "properties": {
+                "left": {
+                  "type": "number"
+                },
+                "top": {
+                  "type": "number"
+                },
+                "right": {
+                  "type": "number"
+                },
+                "bottom": {
+                  "type": "number"
+                },
+                "unit": {
+                  "type": "string",
+                  "enum": [
+                    "pt",
+                    "px",
+                    "mm",
+                    "in"
+                  ]
+                }
+              },
+              "required": [
+                "left",
+                "top",
+                "right",
+                "bottom",
+                "unit"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "id",
+            "name",
+            "bounds"
+          ],
+          "additionalProperties": false
+        },
+        "maxItems": 1000
+      },
+      "layers": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "$ref": "#/properties/id"
+            },
+            "name": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 512
+            },
+            "visible": {
+              "type": "boolean"
+            },
+            "locked": {
+              "type": "boolean"
+            },
+            "itemCount": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "id",
+            "name",
+            "visible",
+            "locked",
+            "itemCount"
+          ],
+          "additionalProperties": false
+        },
+        "maxItems": 10000
+      },
+      "items": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "$ref": "#/properties/id"
+            },
+            "name": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 512
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "path",
+                "compound-path",
+                "group",
+                "text",
+                "placed",
+                "raster",
+                "symbol",
+                "mesh",
+                "unknown"
+              ]
+            },
+            "layerId": {
+              "$ref": "#/properties/id"
+            },
+            "parentId": {
+              "anyOf": [
+                {
+                  "$ref": "#/properties/id"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "bounds": {
+              "$ref": "#/properties/artboards/items/properties/bounds"
+            },
+            "visible": {
+              "type": "boolean"
+            },
+            "locked": {
+              "type": "boolean"
+            },
+            "selected": {
+              "type": "boolean"
+            },
+            "opacity": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "geometry": {
+              "type": "object",
+              "additionalProperties": {},
+              "propertyNames": {
+                "maxLength": 128
+              }
+            },
+            "fillColor": {
+              "type": "object",
+              "properties": {
+                "space": {
+                  "type": "string",
+                  "enum": [
+                    "rgb",
+                    "cmyk",
+                    "lab",
+                    "gray"
+                  ]
+                },
+                "components": {
+                  "type": "array",
+                  "items": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                  "minItems": 1,
+                  "maxItems": 4
+                },
+                "alpha": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1,
+                  "default": 1
+                }
+              },
+              "required": [
+                "space",
+                "components"
+              ],
+              "additionalProperties": false
+            },
+            "strokeColor": {
+              "$ref": "#/properties/items/items/properties/fillColor"
+            }
+          },
+          "required": [
+            "id",
+            "name",
+            "type",
+            "layerId",
+            "parentId",
+            "bounds",
+            "visible",
+            "locked",
+            "selected",
+            "opacity"
+          ],
+          "additionalProperties": false
+        },
+        "maxItems": 100000
+      },
+      "truncated": {
+        "type": "boolean"
+      },
+      "nextCursor": {
+        "type": "string",
+        "maxLength": 2048
+      }
+    },
+    "required": [
+      "id",
+      "revision",
+      "name",
+      "saved",
+      "colorSpace",
+      "activeArtboardId",
+      "artboards",
+      "layers",
+      "items",
+      "truncated"
+    ],
+    "additionalProperties": false,
+    "$schema": "https://json-schema.org/draft/2020-12/schema"
+  },
+  "AppId": {
+    "type": "string",
+    "enum": [
+      "photoshop",
+      "illustrator",
+      "after-effects",
+      "premiere-pro"
+    ],
+    "$schema": "https://json-schema.org/draft/2020-12/schema"
+  },
+  "ApprovalToken": {
+    "type": "object",
+    "properties": {
+      "tokenId": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 256
+      },
+      "planHash": {
+        "type": "string",
+        "pattern": "^[a-f0-9]{64}$"
+      },
+      "scopeHash": {
+        "type": "string",
+        "pattern": "^[a-f0-9]{64}$"
+      },
+      "risk": {
+        "type": "string",
+        "enum": [
+          "R0",
+          "R1",
+          "R2",
+          "R3",
+          "R4"
+        ]
+      },
+      "nonce": {
+        "type": "string",
+        "minLength": 16,
+        "maxLength": 256
+      },
+      "issuedAt": {
+        "type": "string",
+        "format": "date-time"
+      },
+      "expiresAt": {
+        "type": "string",
+        "format": "date-time"
+      },
+      "signature": {
+        "type": "string",
+        "minLength": 32,
+        "maxLength": 256
+      }
+    },
+    "required": [
+      "tokenId",
+      "planHash",
+      "scopeHash",
+      "risk",
+      "nonce",
+      "issuedAt",
+      "expiresAt",
+      "signature"
+    ],
+    "additionalProperties": false,
+    "$schema": "https://json-schema.org/draft/2020-12/schema"
+  },
+  "ArtifactMetadata": {
+    "type": "object",
+    "properties": {
+      "sha256": {
+        "type": "string",
+        "pattern": "^[a-f0-9]{64}$"
+      },
+      "uri": {
+        "type": "string",
+        "pattern": "^artifact:\\/\\/sha256-[a-f0-9]{64}$"
+      },
+      "mediaType": {
+        "type": "string",
+        "maxLength": 256
+      },
+      "sizeBytes": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "createdAt": {
+        "type": "string",
+        "format": "date-time"
+      },
+      "immutable": {
+        "type": "boolean",
+        "const": true
+      },
+      "provenance": {
+        "type": "object",
+        "additionalProperties": {},
+        "propertyNames": {
+          "maxLength": 128
+        },
+        "default": {}
+      }
+    },
+    "required": [
+      "sha256",
+      "uri",
+      "sizeBytes",
+      "createdAt",
+      "immutable"
+    ],
+    "additionalProperties": false,
+    "$schema": "https://json-schema.org/draft/2020-12/schema"
+  },
+  "ArtifactRef": {
+    "type": "object",
+    "properties": {
+      "artifactId": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 256
+      },
+      "kind": {
+        "type": "string",
+        "enum": [
+          "file",
+          "directory",
+          "snapshot",
+          "preview",
+          "report"
+        ]
+      },
+      "displayName": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 255
+      },
+      "mediaType": {
+        "type": "string",
+        "maxLength": 256
+      },
+      "sizeBytes": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "sha256": {
+        "type": "string",
+        "pattern": "^[a-f0-9]{64}$"
+      },
+      "expiresAt": {
+        "type": "string",
+        "format": "date-time"
+      },
+      "provenance": {
+        "type": "object",
+        "properties": {
+          "sourceOperationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sourceArtifactId": {
+            "$ref": "#/properties/artifactId"
+          },
+          "app": {
+            "type": "string",
+            "enum": [
+              "photoshop",
+              "illustrator",
+              "after-effects",
+              "premiere-pro"
+            ]
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "required": [
+      "artifactId",
+      "kind",
+      "displayName"
+    ],
+    "additionalProperties": false,
+    "$schema": "https://json-schema.org/draft/2020-12/schema"
+  },
+  "CapabilityDescriptor": {
+    "type": "object",
+    "properties": {
+      "name": {
+        "type": "string",
+        "pattern": "^[a-z0-9.-]+@\\d+$"
+      },
+      "description": {
+        "type": "string",
+        "maxLength": 1024
+      },
+      "version": {
+        "type": "integer",
+        "exclusiveMinimum": true,
+        "minimum": 0
+      }
+    },
+    "required": [
+      "name",
+      "version"
+    ],
+    "additionalProperties": false,
+    "$schema": "https://json-schema.org/draft/2020-12/schema"
+  },
+  "Compensable": {
+    "type": "object",
+    "properties": {
+      "operationId": {
+        "type": "string",
+        "format": "uuid"
+      },
+      "index": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "action": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 256
+      },
+      "status": {
+        "type": "string",
+        "enum": [
+          "pending",
+          "applied",
+          "failed",
+          "compensated"
+        ]
+      },
+      "details": {
+        "type": "object",
+        "additionalProperties": {},
+        "propertyNames": {
+          "maxLength": 128
+        },
+        "default": {}
+      }
+    },
+    "required": [
+      "operationId",
+      "index",
+      "action",
+      "status"
+    ],
+    "additionalProperties": false,
+    "$schema": "https://json-schema.org/draft/2020-12/schema"
+  },
+  "ErrorCode": {
+    "type": "string",
+    "enum": [
+      "INVALID_ARGUMENT",
+      "UNAUTHENTICATED",
+      "PERMISSION_DENIED",
+      "APP_NOT_RUNNING",
+      "BRIDGE_UNAVAILABLE",
+      "UNSUPPORTED_CAPABILITY",
+      "AMBIGUOUS_TARGET",
+      "NOT_FOUND",
+      "CONFLICT",
+      "LOCKED",
+      "USER_CANCELLED",
+      "TIMEOUT",
+      "RATE_LIMITED",
+      "PARTIAL_FAILURE",
+      "HOST_ERROR",
+      "EXPORT_FAILED",
+      "VERIFICATION_FAILED",
+      "SNAPSHOT_FAILED",
+      "INTERNAL"
+    ],
+    "$schema": "https://json-schema.org/draft/2020-12/schema"
+  },
+  "FileGrant": {
+    "type": "object",
+    "properties": {
+      "grantId": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 256
+      },
+      "access": {
+        "type": "string",
+        "enum": [
+          "read",
+          "write",
+          "read-write"
+        ]
+      },
+      "suggestedName": {
+        "type": "string",
+        "maxLength": 255
+      }
+    },
+    "required": [
+      "grantId",
+      "access"
+    ],
+    "additionalProperties": false,
+    "$schema": "https://json-schema.org/draft/2020-12/schema"
+  },
+  "IllustratorArtboardExport": {
+    "type": "object",
+    "properties": {
+      "target": {
+        "type": "object",
+        "properties": {
+          "app": {
+            "type": "string",
+            "enum": [
+              "photoshop",
+              "illustrator",
+              "after-effects",
+              "premiere-pro"
+            ]
+          },
+          "instanceId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "projectId": {
+            "$ref": "#/properties/target/properties/instanceId"
+          },
+          "documentId": {
+            "$ref": "#/properties/target/properties/instanceId"
+          },
+          "entityId": {
+            "$ref": "#/properties/target/properties/instanceId"
+          }
+        },
+        "required": [
+          "app"
+        ],
+        "additionalProperties": false
+      },
+      "artboardIds": {
+        "type": "array",
+        "items": {
+          "$ref": "#/properties/target/properties/instanceId"
+        },
+        "minItems": 1,
+        "maxItems": 1000
+      },
+      "format": {
+        "type": "string",
+        "enum": [
+          "svg",
+          "png"
+        ]
+      },
+      "destination": {
+        "type": "object",
+        "properties": {
+          "grantId": {
+            "$ref": "#/properties/target/properties/instanceId"
+          },
+          "access": {
+            "type": "string",
+            "enum": [
+              "read",
+              "write",
+              "read-write"
+            ]
+          },
+          "suggestedName": {
+            "type": "string",
+            "maxLength": 255
+          }
+        },
+        "required": [
+          "grantId",
+          "access"
+        ],
+        "additionalProperties": false
+      },
+      "scale": {
+        "type": "number",
+        "exclusiveMinimum": true,
+        "minimum": 0,
+        "maximum": 16,
+        "default": 1
+      },
+      "maxDimension": {
+        "type": "integer",
+        "exclusiveMinimum": true,
+        "minimum": 0,
+        "maximum": 100000
+      },
+      "mutation": {
+        "type": "object",
+        "properties": {
+          "operationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "expectedRevision": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "dryRun": {
+            "type": "boolean",
+            "default": false
+          },
+          "atomic": {
+            "type": "boolean",
+            "default": true
+          },
+          "conflictPolicy": {
+            "type": "string",
+            "enum": [
+              "fail",
+              "rebase-safe"
+            ],
+            "default": "fail"
+          },
+          "verification": {
+            "type": "string",
+            "enum": [
+              "none",
+              "state",
+              "render-proof"
+            ],
+            "default": "state"
+          },
+          "approvalToken": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          },
+          "explicitConfirmation": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "operationId"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "required": [
+      "target",
+      "artboardIds",
+      "format",
+      "destination",
+      "mutation"
+    ],
+    "additionalProperties": false,
+    "$schema": "https://json-schema.org/draft/2020-12/schema"
+  },
+  "IllustratorArtboardExportResult": {
+    "type": "object",
+    "properties": {
+      "manifest": {
+        "type": "object",
+        "additionalProperties": {}
+      },
+      "artifacts": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "artifactId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            "kind": {
+              "type": "string",
+              "enum": [
+                "file",
+                "directory",
+                "snapshot",
+                "preview",
+                "report"
+              ]
+            },
+            "displayName": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 255
+            },
+            "mediaType": {
+              "type": "string",
+              "maxLength": 256
+            },
+            "sizeBytes": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "expiresAt": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "provenance": {
+              "type": "object",
+              "properties": {
+                "sourceOperationId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "sourceArtifactId": {
+                  "$ref": "#/properties/artifacts/items/properties/artifactId"
+                },
+                "app": {
+                  "type": "string",
+                  "enum": [
+                    "photoshop",
+                    "illustrator",
+                    "after-effects",
+                    "premiere-pro"
+                  ]
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "artifactId",
+            "kind",
+            "displayName"
+          ],
+          "additionalProperties": false
+        },
+        "maxItems": 1000
+      }
+    },
+    "required": [
+      "manifest",
+      "artifacts"
+    ],
+    "additionalProperties": false,
+    "$schema": "https://json-schema.org/draft/2020-12/schema"
+  },
+  "IllustratorEditCommand": {
+    "anyOf": [
+      {
+        "type": "object",
+        "properties": {
+          "op": {
+            "type": "string",
+            "const": "create-layer"
+          },
+          "tempId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512
+          },
+          "parentId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          }
+        },
+        "required": [
+          "op",
+          "tempId",
+          "name"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "op": {
+            "type": "string",
+            "const": "create-item"
+          },
+          "tempId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "itemType": {
+            "type": "string",
+            "enum": [
+              "rectangle",
+              "ellipse",
+              "path",
+              "text",
+              "group"
+            ]
+          },
+          "layerId": {
+            "$ref": "#/anyOf/0/properties/parentId"
+          },
+          "geometry": {
+            "type": "object",
+            "additionalProperties": {},
+            "propertyNames": {
+              "maxLength": 128
+            }
+          },
+          "style": {
+            "type": "object",
+            "additionalProperties": {},
+            "propertyNames": {
+              "maxLength": 128
+            }
+          }
+        },
+        "required": [
+          "op",
+          "tempId",
+          "itemType",
+          "layerId",
+          "geometry",
+          "style"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "op": {
+            "type": "string",
+            "const": "transform"
+          },
+          "itemIds": {
+            "type": "array",
+            "items": {
+              "$ref": "#/anyOf/0/properties/parentId"
+            },
+            "minItems": 1,
+            "maxItems": 500
+          },
+          "matrix": {
+            "type": "array",
+            "minItems": 6,
+            "maxItems": 6,
+            "items": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ]
+          }
+        },
+        "required": [
+          "op",
+          "itemIds",
+          "matrix"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "op": {
+            "type": "string",
+            "const": "delete"
+          },
+          "itemIds": {
+            "type": "array",
+            "items": {
+              "$ref": "#/anyOf/0/properties/parentId"
+            },
+            "minItems": 1,
+            "maxItems": 500
+          },
+          "permanent": {
+            "type": "boolean",
+            "const": false,
+            "default": false
+          }
+        },
+        "required": [
+          "op",
+          "itemIds"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "op": {
+            "type": "string",
+            "const": "create-path"
+          },
+          "points": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                }
+              ]
+            },
+            "minItems": 2,
+            "maxItems": 100000
+          },
+          "closed": {
+            "type": "boolean",
+            "default": false
+          },
+          "layerId": {
+            "$ref": "#/anyOf/0/properties/parentId"
+          },
+          "tempId": {
+            "$ref": "#/anyOf/0/properties/parentId"
+          },
+          "style": {
+            "type": "object",
+            "additionalProperties": {},
+            "propertyNames": {
+              "maxLength": 128
+            },
+            "default": {}
+          }
+        },
+        "required": [
+          "op",
+          "points"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "op": {
+            "type": "string",
+            "const": "compound-path"
+          },
+          "itemIds": {
+            "type": "array",
+            "items": {
+              "$ref": "#/anyOf/0/properties/parentId"
+            },
+            "minItems": 2,
+            "maxItems": 1000
+          },
+          "tempId": {
+            "$ref": "#/anyOf/0/properties/parentId"
+          }
+        },
+        "required": [
+          "op",
+          "itemIds"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "op": {
+            "type": "string",
+            "const": "boolean"
+          },
+          "operation": {
+            "type": "string",
+            "enum": [
+              "union",
+              "intersection",
+              "exclude"
+            ]
+          },
+          "itemIds": {
+            "type": "array",
+            "items": {
+              "$ref": "#/anyOf/0/properties/parentId"
+            },
+            "minItems": 2,
+            "maxItems": 1000
+          },
+          "tempId": {
+            "$ref": "#/anyOf/0/properties/parentId"
+          }
+        },
+        "required": [
+          "op",
+          "operation",
+          "itemIds"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "op": {
+            "type": "string",
+            "const": "set-typography"
+          },
+          "itemId": {
+            "$ref": "#/anyOf/0/properties/parentId"
+          },
+          "text": {
+            "type": "string",
+            "maxLength": 100000
+          },
+          "fontFamily": {
+            "type": "string",
+            "maxLength": 256
+          },
+          "fontSize": {
+            "type": "number",
+            "exclusiveMinimum": true,
+            "minimum": 0,
+            "maximum": 10000
+          },
+          "kerning": {
+            "type": "number",
+            "minimum": -10000,
+            "maximum": 10000
+          },
+          "tracking": {
+            "type": "number",
+            "minimum": -10000,
+            "maximum": 10000
+          },
+          "alignment": {
+            "type": "string",
+            "enum": [
+              "left",
+              "center",
+              "right",
+              "justify"
+            ]
+          }
+        },
+        "required": [
+          "op",
+          "itemId"
+        ],
+        "additionalProperties": false
+      }
+    ],
+    "$schema": "https://json-schema.org/draft/2020-12/schema"
+  },
+  "IllustratorTextSpec": {
+    "type": "object",
+    "properties": {
+      "itemId": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 256
+      },
+      "text": {
+        "type": "string",
+        "maxLength": 100000
+      },
+      "fontFamily": {
+        "type": "string",
+        "maxLength": 256
+      },
+      "fontSize": {
+        "type": "number",
+        "exclusiveMinimum": true,
+        "minimum": 0,
+        "maximum": 10000
+      },
+      "kerning": {
+        "type": "number",
+        "minimum": -10000,
+        "maximum": 10000
+      },
+      "tracking": {
+        "type": "number",
+        "minimum": -10000,
+        "maximum": 10000
+      },
+      "alignment": {
+        "type": "string",
+        "enum": [
+          "left",
+          "center",
+          "right",
+          "justify"
+        ]
+      }
+    },
+    "required": [
+      "itemId"
+    ],
+    "additionalProperties": false,
+    "$schema": "https://json-schema.org/draft/2020-12/schema"
+  },
+  "IllustratorVectorOperation": {
+    "anyOf": [
+      {
+        "type": "object",
+        "properties": {
+          "op": {
+            "type": "string",
+            "const": "create-path"
+          },
+          "points": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                }
+              ]
+            },
+            "minItems": 2,
+            "maxItems": 100000
+          },
+          "closed": {
+            "type": "boolean",
+            "default": false
+          }
+        },
+        "required": [
+          "op",
+          "points"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "op": {
+            "type": "string",
+            "const": "compound-path"
+          },
+          "itemIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            "minItems": 2,
+            "maxItems": 1000
+          }
+        },
+        "required": [
+          "op",
+          "itemIds"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "op": {
+            "type": "string",
+            "const": "boolean"
+          },
+          "operation": {
+            "type": "string",
+            "enum": [
+              "union",
+              "intersection",
+              "exclude"
+            ]
+          },
+          "itemIds": {
+            "type": "array",
+            "items": {
+              "$ref": "#/anyOf/1/properties/itemIds/items"
+            },
+            "minItems": 2,
+            "maxItems": 1000
+          }
+        },
+        "required": [
+          "op",
+          "operation",
+          "itemIds"
+        ],
+        "additionalProperties": false
+      }
+    ],
+    "$schema": "https://json-schema.org/draft/2020-12/schema"
+  },
+  "Job": {
+    "type": "object",
+    "properties": {
+      "id": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 256
+      },
+      "kind": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 128
+      },
+      "status": {
+        "type": "string",
+        "enum": [
+          "queued",
+          "running",
+          "cancelling",
+          "succeeded",
+          "failed",
+          "cancelled"
+        ]
+      },
+      "progress": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 1
+      },
+      "createdAt": {
+        "type": "string",
+        "format": "date-time"
+      },
+      "updatedAt": {
+        "type": "string",
+        "format": "date-time"
+      },
+      "operationId": {
+        "type": "string",
+        "format": "uuid"
+      },
+      "artifacts": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "artifactId": {
+              "$ref": "#/properties/id"
+            },
+            "kind": {
+              "type": "string",
+              "enum": [
+                "file",
+                "directory",
+                "snapshot",
+                "preview",
+                "report"
+              ]
+            },
+            "displayName": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 255
+            },
+            "mediaType": {
+              "type": "string",
+              "maxLength": 256
+            },
+            "sizeBytes": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "expiresAt": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "provenance": {
+              "type": "object",
+              "properties": {
+                "sourceOperationId": {
+                  "$ref": "#/properties/operationId"
+                },
+                "sourceArtifactId": {
+                  "$ref": "#/properties/id"
+                },
+                "app": {
+                  "type": "string",
+                  "enum": [
+                    "photoshop",
+                    "illustrator",
+                    "after-effects",
+                    "premiere-pro"
+                  ]
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "artifactId",
+            "kind",
+            "displayName"
+          ],
+          "additionalProperties": false
+        },
+        "maxItems": 100
+      },
+      "error": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "enum": [
+              "INVALID_ARGUMENT",
+              "UNAUTHENTICATED",
+              "PERMISSION_DENIED",
+              "APP_NOT_RUNNING",
+              "BRIDGE_UNAVAILABLE",
+              "UNSUPPORTED_CAPABILITY",
+              "AMBIGUOUS_TARGET",
+              "NOT_FOUND",
+              "CONFLICT",
+              "LOCKED",
+              "USER_CANCELLED",
+              "TIMEOUT",
+              "RATE_LIMITED",
+              "PARTIAL_FAILURE",
+              "HOST_ERROR",
+              "EXPORT_FAILED",
+              "VERIFICATION_FAILED",
+              "SNAPSHOT_FAILED",
+              "INTERNAL"
+            ]
+          },
+          "message": {
+            "type": "string",
+            "maxLength": 2048
+          },
+          "requestId": {
+            "$ref": "#/properties/id"
+          },
+          "retryable": {
+            "type": "boolean"
+          },
+          "details": {
+            "type": "object",
+            "additionalProperties": {},
+            "propertyNames": {
+              "maxLength": 128
+            },
+            "default": {}
+          },
+          "appliedOperationIds": {
+            "type": "array",
+            "items": {
+              "$ref": "#/properties/operationId"
+            },
+            "maxItems": 500,
+            "default": []
+          },
+          "recovery": {
+            "type": "string",
+            "maxLength": 1024
+          }
+        },
+        "required": [
+          "code",
+          "message",
+          "requestId",
+          "retryable"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "required": [
+      "id",
+      "kind",
+      "status",
+      "progress",
+      "createdAt",
+      "updatedAt",
+      "artifacts"
+    ],
+    "additionalProperties": false,
+    "$schema": "https://json-schema.org/draft/2020-12/schema"
+  },
+  "MutationOptions": {
+    "type": "object",
+    "properties": {
+      "operationId": {
+        "type": "string",
+        "format": "uuid"
+      },
+      "expectedRevision": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 128
+      },
+      "dryRun": {
+        "type": "boolean",
+        "default": false
+      },
+      "atomic": {
+        "type": "boolean",
+        "default": true
+      },
+      "conflictPolicy": {
+        "type": "string",
+        "enum": [
+          "fail",
+          "rebase-safe"
+        ],
+        "default": "fail"
+      },
+      "verification": {
+        "type": "string",
+        "enum": [
+          "none",
+          "state",
+          "render-proof"
+        ],
+        "default": "state"
+      },
+      "approvalToken": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 4096
+      },
+      "explicitConfirmation": {
+        "type": "boolean"
+      }
+    },
+    "required": [
+      "operationId"
+    ],
+    "additionalProperties": false,
+    "$schema": "https://json-schema.org/draft/2020-12/schema"
+  },
+  "NormalizedError": {
+    "type": "object",
+    "properties": {
+      "code": {
+        "type": "string",
+        "enum": [
+          "INVALID_ARGUMENT",
+          "UNAUTHENTICATED",
+          "PERMISSION_DENIED",
+          "APP_NOT_RUNNING",
+          "BRIDGE_UNAVAILABLE",
+          "UNSUPPORTED_CAPABILITY",
+          "AMBIGUOUS_TARGET",
+          "NOT_FOUND",
+          "CONFLICT",
+          "LOCKED",
+          "USER_CANCELLED",
+          "TIMEOUT",
+          "RATE_LIMITED",
+          "PARTIAL_FAILURE",
+          "HOST_ERROR",
+          "EXPORT_FAILED",
+          "VERIFICATION_FAILED",
+          "SNAPSHOT_FAILED",
+          "INTERNAL"
+        ]
+      },
+      "message": {
+        "type": "string",
+        "maxLength": 2048
+      },
+      "requestId": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 256
+      },
+      "retryable": {
+        "type": "boolean"
+      },
+      "details": {
+        "type": "object",
+        "additionalProperties": {},
+        "propertyNames": {
+          "maxLength": 128
+        },
+        "default": {}
+      },
+      "appliedOperationIds": {
+        "type": "array",
+        "items": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "maxItems": 500,
+        "default": []
+      },
+      "recovery": {
+        "type": "string",
+        "maxLength": 1024
+      }
+    },
+    "required": [
+      "code",
+      "message",
+      "requestId",
+      "retryable"
+    ],
+    "additionalProperties": false,
+    "$schema": "https://json-schema.org/draft/2020-12/schema"
+  },
+  "OperationReceipt": {
+    "type": "object",
+    "properties": {
+      "status": {
+        "type": "string",
+        "enum": [
+          "planned",
+          "applied",
+          "partial",
+          "rolled-back",
+          "queued"
+        ]
+      },
+      "previousRevision": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 128
+      },
+      "revision": {
+        "$ref": "#/properties/previousRevision"
+      },
+      "appliedIndexes": {
+        "type": "array",
+        "items": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "maxItems": 500
+      },
+      "failedIndexes": {
+        "type": "array",
+        "items": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "maxItems": 500
+      },
+      "tempIdMap": {
+        "type": "object",
+        "additionalProperties": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "propertyNames": {
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "default": {}
+      },
+      "snapshot": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "$ref": "#/properties/tempIdMap/additionalProperties"
+          },
+          "target": {
+            "type": "object",
+            "properties": {
+              "app": {
+                "type": "string",
+                "enum": [
+                  "photoshop",
+                  "illustrator",
+                  "after-effects",
+                  "premiere-pro"
+                ]
+              },
+              "instanceId": {
+                "$ref": "#/properties/tempIdMap/additionalProperties"
+              },
+              "projectId": {
+                "$ref": "#/properties/tempIdMap/additionalProperties"
+              },
+              "documentId": {
+                "$ref": "#/properties/tempIdMap/additionalProperties"
+              },
+              "entityId": {
+                "$ref": "#/properties/tempIdMap/additionalProperties"
+              }
+            },
+            "required": [
+              "app"
+            ],
+            "additionalProperties": false
+          },
+          "revision": {
+            "$ref": "#/properties/previousRevision"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "artifact": {
+            "type": "object",
+            "properties": {
+              "artifactId": {
+                "$ref": "#/properties/tempIdMap/additionalProperties"
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "file",
+                  "directory",
+                  "snapshot",
+                  "preview",
+                  "report"
+                ]
+              },
+              "displayName": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 255
+              },
+              "mediaType": {
+                "type": "string",
+                "maxLength": 256
+              },
+              "sizeBytes": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "sha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              },
+              "expiresAt": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "provenance": {
+                "type": "object",
+                "properties": {
+                  "sourceOperationId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "sourceArtifactId": {
+                    "$ref": "#/properties/tempIdMap/additionalProperties"
+                  },
+                  "app": {
+                    "$ref": "#/properties/snapshot/properties/target/properties/app"
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "artifactId",
+              "kind",
+              "displayName"
+            ],
+            "additionalProperties": false
+          },
+          "verified": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "target",
+          "revision",
+          "createdAt",
+          "sha256",
+          "artifact",
+          "verified"
+        ],
+        "additionalProperties": false
+      },
+      "verification": {
+        "type": "string",
+        "enum": [
+          "skipped",
+          "passed",
+          "failed"
+        ]
+      },
+      "compensations": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "operationId": {
+              "$ref": "#/properties/snapshot/properties/artifact/properties/provenance/properties/sourceOperationId"
+            },
+            "index": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "action": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            "status": {
+              "type": "string",
+              "enum": [
+                "pending",
+                "applied",
+                "failed",
+                "compensated"
+              ]
+            },
+            "details": {
+              "type": "object",
+              "additionalProperties": {},
+              "propertyNames": {
+                "maxLength": 128
+              },
+              "default": {}
+            }
+          },
+          "required": [
+            "operationId",
+            "index",
+            "action",
+            "status"
+          ],
+          "additionalProperties": false
+        },
+        "maxItems": 500,
+        "default": []
+      },
+      "job": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "$ref": "#/properties/tempIdMap/additionalProperties"
+          },
+          "kind": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "queued",
+              "running",
+              "cancelling",
+              "succeeded",
+              "failed",
+              "cancelled"
+            ]
+          },
+          "progress": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "operationId": {
+            "$ref": "#/properties/snapshot/properties/artifact/properties/provenance/properties/sourceOperationId"
+          },
+          "artifacts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/properties/snapshot/properties/artifact"
+            },
+            "maxItems": 100
+          },
+          "error": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string",
+                "enum": [
+                  "INVALID_ARGUMENT",
+                  "UNAUTHENTICATED",
+                  "PERMISSION_DENIED",
+                  "APP_NOT_RUNNING",
+                  "BRIDGE_UNAVAILABLE",
+                  "UNSUPPORTED_CAPABILITY",
+                  "AMBIGUOUS_TARGET",
+                  "NOT_FOUND",
+                  "CONFLICT",
+                  "LOCKED",
+                  "USER_CANCELLED",
+                  "TIMEOUT",
+                  "RATE_LIMITED",
+                  "PARTIAL_FAILURE",
+                  "HOST_ERROR",
+                  "EXPORT_FAILED",
+                  "VERIFICATION_FAILED",
+                  "SNAPSHOT_FAILED",
+                  "INTERNAL"
+                ]
+              },
+              "message": {
+                "type": "string",
+                "maxLength": 2048
+              },
+              "requestId": {
+                "$ref": "#/properties/tempIdMap/additionalProperties"
+              },
+              "retryable": {
+                "type": "boolean"
+              },
+              "details": {
+                "type": "object",
+                "additionalProperties": {},
+                "propertyNames": {
+                  "maxLength": 128
+                },
+                "default": {}
+              },
+              "appliedOperationIds": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/properties/snapshot/properties/artifact/properties/provenance/properties/sourceOperationId"
+                },
+                "maxItems": 500,
+                "default": []
+              },
+              "recovery": {
+                "type": "string",
+                "maxLength": 1024
+              }
+            },
+            "required": [
+              "code",
+              "message",
+              "requestId",
+              "retryable"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "status",
+          "progress",
+          "createdAt",
+          "updatedAt",
+          "artifacts"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "required": [
+      "status",
+      "appliedIndexes",
+      "failedIndexes"
+    ],
+    "additionalProperties": false,
+    "$schema": "https://json-schema.org/draft/2020-12/schema"
+  },
+  "PhotoshopAdjustmentSpec": {
+    "type": "object",
+    "properties": {
+      "layerId": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 256
+      },
+      "kind": {
+        "type": "string",
+        "enum": [
+          "curves",
+          "levels",
+          "hue-saturation",
+          "color-balance",
+          "brightness-contrast"
+        ]
+      },
+      "properties": {
+        "type": "object",
+        "additionalProperties": {},
+        "propertyNames": {
+          "maxLength": 128
+        },
+        "default": {}
+      }
+    },
+    "required": [
+      "kind"
+    ],
+    "additionalProperties": false,
+    "$schema": "https://json-schema.org/draft/2020-12/schema"
+  },
+  "PhotoshopBatchPlayCommand": {
+    "type": "object",
+    "properties": {
+      "action": {
+        "type": "string",
+        "enum": [
+          "create",
+          "apply",
+          "set",
+          "delete"
+        ]
+      },
+      "descriptor": {
+        "type": "object",
+        "properties": {
+          "_obj": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "_target": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": {},
+              "propertyNames": {
+                "maxLength": 128
+              }
+            },
+            "maxItems": 32
+          },
+          "_options": {
+            "type": "object",
+            "additionalProperties": {},
+            "propertyNames": {
+              "maxLength": 128
+            }
+          }
+        },
+        "required": [
+          "_obj"
+        ],
+        "additionalProperties": {}
+      },
+      "options": {
+        "type": "object",
+        "properties": {
+          "dialogMode": {
+            "type": "string",
+            "enum": [
+              "silent",
+              "display",
+              "dontDisplay"
+            ],
+            "default": "silent"
+          },
+          "synchronousExecution": {
+            "type": "boolean",
+            "default": true
+          },
+          "modalBehavior": {
+            "type": "string",
+            "enum": [
+              "execute",
+              "fail"
+            ],
+            "default": "execute"
+          }
+        },
+        "additionalProperties": false,
+        "default": {}
+      }
+    },
+    "required": [
+      "action",
+      "descriptor"
+    ],
+    "additionalProperties": false,
+    "$schema": "https://json-schema.org/draft/2020-12/schema"
+  },
+  "PhotoshopBatchPlayDescriptor": {
+    "type": "object",
+    "properties": {
+      "_obj": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 256
+      },
+      "_target": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "additionalProperties": {},
+          "propertyNames": {
+            "maxLength": 128
+          }
+        },
+        "maxItems": 32
+      },
+      "_options": {
+        "type": "object",
+        "additionalProperties": {},
+        "propertyNames": {
+          "maxLength": 128
+        }
+      }
+    },
+    "required": [
+      "_obj"
+    ],
+    "additionalProperties": {},
+    "$schema": "https://json-schema.org/draft/2020-12/schema"
+  },
+  "PhotoshopFilterSpec": {
+    "type": "object",
+    "properties": {
+      "filter": {
+        "type": "string",
+        "enum": [
+          "neural",
+          "camera-raw"
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": {},
+        "propertyNames": {
+          "maxLength": 128
+        },
+        "default": {}
+      }
+    },
+    "required": [
+      "filter"
+    ],
+    "additionalProperties": false,
+    "$schema": "https://json-schema.org/draft/2020-12/schema"
+  },
+  "PhotoshopLayerCommand": {
+    "anyOf": [
+      {
+        "type": "object",
+        "properties": {
+          "op": {
+            "type": "string",
+            "const": "create"
+          },
+          "tempId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "pixel",
+              "text",
+              "shape",
+              "group",
+              "adjustment"
+            ]
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512
+          },
+          "parentId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "properties": {
+            "type": "object",
+            "additionalProperties": {},
+            "propertyNames": {
+              "maxLength": 128
+            },
+            "default": {}
+          }
+        },
+        "required": [
+          "op",
+          "tempId",
+          "kind",
+          "name"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "op": {
+            "type": "string",
+            "const": "set"
+          },
+          "layerId": {
+            "$ref": "#/anyOf/0/properties/parentId"
+          },
+          "patch": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "maxLength": 512
+              },
+              "visible": {
+                "type": "boolean"
+              },
+              "opacity": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "blendMode": {
+                "type": "string",
+                "maxLength": 128
+              },
+              "locked": {
+                "type": "boolean"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "op",
+          "layerId",
+          "patch"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "op": {
+            "type": "string",
+            "const": "transform"
+          },
+          "layerIds": {
+            "type": "array",
+            "items": {
+              "$ref": "#/anyOf/0/properties/parentId"
+            },
+            "minItems": 1,
+            "maxItems": 500
+          },
+          "matrix": {
+            "type": "array",
+            "minItems": 6,
+            "maxItems": 6,
+            "items": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ]
+          }
+        },
+        "required": [
+          "op",
+          "layerIds",
+          "matrix"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "op": {
+            "type": "string",
+            "const": "delete"
+          },
+          "layerIds": {
+            "type": "array",
+            "items": {
+              "$ref": "#/anyOf/0/properties/parentId"
+            },
+            "minItems": 1,
+            "maxItems": 500
+          },
+          "permanent": {
+            "type": "boolean",
+            "const": false,
+            "default": false
+          }
+        },
+        "required": [
+          "op",
+          "layerIds"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "op": {
+            "type": "string",
+            "const": "filter"
+          },
+          "layerId": {
+            "$ref": "#/anyOf/0/properties/parentId"
+          },
+          "filter": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "parameters": {
+            "type": "object",
+            "additionalProperties": {},
+            "propertyNames": {
+              "maxLength": 128
+            },
+            "default": {}
+          }
+        },
+        "required": [
+          "op",
+          "layerId",
+          "filter"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "op": {
+            "type": "string",
+            "const": "text"
+          },
+          "layerId": {
+            "$ref": "#/anyOf/0/properties/parentId"
+          },
+          "text": {
+            "type": "string",
+            "maxLength": 1000000
+          },
+          "properties": {
+            "type": "object",
+            "additionalProperties": {},
+            "propertyNames": {
+              "maxLength": 128
+            },
+            "default": {}
+          }
+        },
+        "required": [
+          "op",
+          "layerId",
+          "text"
+        ],
+        "additionalProperties": false
+      }
+    ],
+    "$schema": "https://json-schema.org/draft/2020-12/schema"
+  },
+  "PhotoshopLayerExportResult": {
+    "type": "object",
+    "properties": {
+      "manifest": {
+        "type": "object",
+        "additionalProperties": {}
+      },
+      "artifacts": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "artifactId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            "kind": {
+              "type": "string",
+              "enum": [
+                "file",
+                "directory",
+                "snapshot",
+                "preview",
+                "report"
+              ]
+            },
+            "displayName": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 255
+            },
+            "mediaType": {
+              "type": "string",
+              "maxLength": 256
+            },
+            "sizeBytes": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "expiresAt": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "provenance": {
+              "type": "object",
+              "properties": {
+                "sourceOperationId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "sourceArtifactId": {
+                  "$ref": "#/properties/artifacts/items/properties/artifactId"
+                },
+                "app": {
+                  "type": "string",
+                  "enum": [
+                    "photoshop",
+                    "illustrator",
+                    "after-effects",
+                    "premiere-pro"
+                  ]
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "artifactId",
+            "kind",
+            "displayName"
+          ],
+          "additionalProperties": false
+        },
+        "maxItems": 10000
+      }
+    },
+    "required": [
+      "manifest",
+      "artifacts"
+    ],
+    "additionalProperties": false,
+    "$schema": "https://json-schema.org/draft/2020-12/schema"
+  },
+  "PhotoshopLayerExportSpec": {
+    "type": "object",
+    "properties": {
+      "target": {
+        "type": "object",
+        "properties": {
+          "app": {
+            "type": "string",
+            "enum": [
+              "photoshop",
+              "illustrator",
+              "after-effects",
+              "premiere-pro"
+            ]
+          },
+          "instanceId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "projectId": {
+            "$ref": "#/properties/target/properties/instanceId"
+          },
+          "documentId": {
+            "$ref": "#/properties/target/properties/instanceId"
+          },
+          "entityId": {
+            "$ref": "#/properties/target/properties/instanceId"
+          }
+        },
+        "required": [
+          "app"
+        ],
+        "additionalProperties": false
+      },
+      "layerIds": {
+        "type": "array",
+        "items": {
+          "$ref": "#/properties/target/properties/instanceId"
+        },
+        "maxItems": 10000
+      },
+      "groupIds": {
+        "type": "array",
+        "items": {
+          "$ref": "#/properties/target/properties/instanceId"
+        },
+        "maxItems": 1000
+      },
+      "format": {
+        "type": "string",
+        "enum": [
+          "png",
+          "psd"
+        ]
+      },
+      "destination": {
+        "type": "object",
+        "properties": {
+          "grantId": {
+            "$ref": "#/properties/target/properties/instanceId"
+          },
+          "access": {
+            "type": "string",
+            "enum": [
+              "read",
+              "write",
+              "read-write"
+            ]
+          },
+          "suggestedName": {
+            "type": "string",
+            "maxLength": 255
+          }
+        },
+        "required": [
+          "grantId",
+          "access"
+        ],
+        "additionalProperties": false
+      },
+      "scale": {
+        "type": "number",
+        "exclusiveMinimum": true,
+        "minimum": 0,
+        "maximum": 16,
+        "default": 1
+      },
+      "includeHidden": {
+        "type": "boolean",
+        "default": false
+      },
+      "mutation": {
+        "type": "object",
+        "properties": {
+          "operationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "expectedRevision": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "dryRun": {
+            "type": "boolean",
+            "default": false
+          },
+          "atomic": {
+            "type": "boolean",
+            "default": true
+          },
+          "conflictPolicy": {
+            "type": "string",
+            "enum": [
+              "fail",
+              "rebase-safe"
+            ],
+            "default": "fail"
+          },
+          "verification": {
+            "type": "string",
+            "enum": [
+              "none",
+              "state",
+              "render-proof"
+            ],
+            "default": "state"
+          },
+          "approvalToken": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          },
+          "explicitConfirmation": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "operationId"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "required": [
+      "target",
+      "format",
+      "destination",
+      "mutation"
+    ],
+    "additionalProperties": false,
+    "$schema": "https://json-schema.org/draft/2020-12/schema"
+  },
+  "PhotoshopLayerMaskSpec": {
+    "type": "object",
+    "properties": {
+      "layerId": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 256
+      },
+      "kind": {
+        "type": "string",
+        "enum": [
+          "selection",
+          "vector"
+        ]
+      },
+      "invert": {
+        "type": "boolean",
+        "default": false
+      },
+      "density": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 100,
+        "default": 100
+      },
+      "featherPixels": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 10000,
+        "default": 0
+      }
+    },
+    "required": [
+      "layerId",
+      "kind"
+    ],
+    "additionalProperties": false,
+    "$schema": "https://json-schema.org/draft/2020-12/schema"
+  },
+  "PhotoshopSmartObjectSpec": {
+    "type": "object",
+    "properties": {
+      "layerId": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 256
+      },
+      "action": {
+        "type": "string",
+        "enum": [
+          "create",
+          "replace-linked",
+          "edit-embedded"
+        ]
+      },
+      "artifactId": {
+        "$ref": "#/properties/layerId"
+      },
+      "grantId": {
+        "$ref": "#/properties/layerId"
+      }
+    },
+    "required": [
+      "action"
+    ],
+    "additionalProperties": false,
+    "$schema": "https://json-schema.org/draft/2020-12/schema"
+  },
+  "Plan": {
+    "type": "object",
+    "properties": {
+      "planId": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 256
+      },
+      "planHash": {
+        "type": "string",
+        "pattern": "^[a-f0-9]{64}$"
+      },
+      "target": {
+        "type": "object",
+        "properties": {
+          "app": {
+            "type": "string",
+            "enum": [
+              "photoshop",
+              "illustrator",
+              "after-effects",
+              "premiere-pro"
+            ]
+          },
+          "instanceId": {
+            "$ref": "#/properties/planId"
+          },
+          "projectId": {
+            "$ref": "#/properties/planId"
+          },
+          "documentId": {
+            "$ref": "#/properties/planId"
+          },
+          "entityId": {
+            "$ref": "#/properties/planId"
+          }
+        },
+        "required": [
+          "app"
+        ],
+        "additionalProperties": false
+      },
+      "toolName": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 256
+      },
+      "risk": {
+        "type": "string",
+        "enum": [
+          "R0",
+          "R1",
+          "R2",
+          "R3",
+          "R4"
+        ]
+      },
+      "scope": {
+        "type": "object",
+        "properties": {
+          "entities": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "files": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "bytes": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "minutes": {
+            "type": "number",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "entities",
+          "files",
+          "bytes",
+          "minutes"
+        ],
+        "additionalProperties": false
+      },
+      "expectedRevisions": {
+        "type": "object",
+        "additionalProperties": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "propertyNames": {
+          "minLength": 1,
+          "maxLength": 256
+        }
+      },
+      "expiresAt": {
+        "type": "string",
+        "format": "date-time"
+      },
+      "commandsDigest": {
+        "type": "string",
+        "pattern": "^[a-f0-9]{64}$"
+      }
+    },
+    "required": [
+      "planId",
+      "planHash",
+      "target",
+      "toolName",
+      "risk",
+      "scope",
+      "expectedRevisions",
+      "expiresAt",
+      "commandsDigest"
+    ],
+    "additionalProperties": false,
+    "$schema": "https://json-schema.org/draft/2020-12/schema"
+  },
+  "PremiereAutoDuckingPlan": {
+    "type": "object",
+    "properties": {
+      "op": {
+        "type": "string",
+        "const": "autoDucking"
+      },
+      "voiceTrackIndices": {
+        "type": "array",
+        "items": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "minItems": 1,
+        "maxItems": 100
+      },
+      "musicTrackIndices": {
+        "type": "array",
+        "items": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "minItems": 1,
+        "maxItems": 100
+      },
+      "musicClipIds": {
+        "type": "array",
+        "items": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "maxItems": 10000,
+        "default": []
+      },
+      "voiceRanges": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "startTime": {
+              "type": "number",
+              "minimum": 0
+            },
+            "endTime": {
+              "$ref": "#/properties/voiceRanges/items/properties/startTime"
+            }
+          },
+          "required": [
+            "startTime",
+            "endTime"
+          ],
+          "additionalProperties": false
+        },
+        "default": []
+      },
+      "attenuationDb": {
+        "type": "number",
+        "minimum": -96,
+        "maximum": 0
+      },
+      "attackSeconds": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 60
+      },
+      "releaseSeconds": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 60
+      },
+      "threshold": {
+        "type": "number",
+        "minimum": -96,
+        "maximum": 24,
+        "default": -24
+      }
+    },
+    "required": [
+      "op",
+      "voiceTrackIndices",
+      "musicTrackIndices",
+      "attenuationDb",
+      "attackSeconds",
+      "releaseSeconds"
+    ],
+    "additionalProperties": false,
+    "$schema": "https://json-schema.org/draft/2020-12/schema"
+  },
+  "PremiereAutoReframePlan": {
+    "type": "object",
+    "properties": {
+      "op": {
+        "type": "string",
+        "const": "autoReframe"
+      },
+      "aspectRatio": {
+        "type": "string",
+        "const": "9:16"
+      },
+      "horizontalKeyframes": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "time": {
+              "type": "number",
+              "minimum": 0
+            },
+            "position": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            }
+          },
+          "required": [
+            "time",
+            "position"
+          ],
+          "additionalProperties": false
+        },
+        "minItems": 2,
+        "maxItems": 5000
+      },
+      "sourceWidth": {
+        "type": "integer",
+        "exclusiveMinimum": true,
+        "minimum": 0
+      },
+      "sourceHeight": {
+        "type": "integer",
+        "exclusiveMinimum": true,
+        "minimum": 0
+      },
+      "trackIndex": {
+        "type": "integer",
+        "minimum": 0,
+        "default": 0
+      },
+      "clipIds": {
+        "type": "array",
+        "items": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "maxItems": 500,
+        "default": []
+      }
+    },
+    "required": [
+      "op",
+      "aspectRatio",
+      "horizontalKeyframes",
+      "sourceWidth",
+      "sourceHeight"
+    ],
+    "additionalProperties": false,
+    "$schema": "https://json-schema.org/draft/2020-12/schema"
+  },
+  "PremiereCutSilencesPlan": {
+    "type": "object",
+    "properties": {
+      "op": {
+        "type": "string",
+        "const": "cutSilences"
+      },
+      "ranges": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "startTime": {
+              "type": "number",
+              "minimum": 0
+            },
+            "endTime": {
+              "$ref": "#/properties/ranges/items/properties/startTime"
+            }
+          },
+          "required": [
+            "startTime",
+            "endTime"
+          ],
+          "additionalProperties": false
+        },
+        "minItems": 1,
+        "maxItems": 10000
+      },
+      "trackIndices": {
+        "type": "array",
+        "items": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "minItems": 1,
+        "maxItems": 1000
+      },
+      "ripple": {
+        "type": "boolean",
+        "default": true
+      }
+    },
+    "required": [
+      "op",
+      "ranges",
+      "trackIndices"
+    ],
+    "additionalProperties": false,
+    "$schema": "https://json-schema.org/draft/2020-12/schema"
+  },
+  "PremiereEditPlan": {
+    "type": "object",
+    "properties": {
+      "version": {
+        "type": "string",
+        "const": "1"
+      },
+      "target": {
+        "type": "object",
+        "properties": {
+          "app": {
+            "type": "string",
+            "enum": [
+              "photoshop",
+              "illustrator",
+              "after-effects",
+              "premiere-pro"
+            ]
+          },
+          "instanceId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "projectId": {
+            "$ref": "#/properties/target/properties/instanceId"
+          },
+          "documentId": {
+            "$ref": "#/properties/target/properties/instanceId"
+          },
+          "entityId": {
+            "$ref": "#/properties/target/properties/instanceId"
+          }
+        },
+        "required": [
+          "app"
+        ],
+        "additionalProperties": false
+      },
+      "operations": {
+        "type": "array",
+        "items": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "op": {
+                      "type": "string",
+                      "const": "splitClip"
+                    },
+                    "trackIndex": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "timeSeconds": {
+                      "type": "number",
+                      "minimum": 0
+                    }
+                  },
+                  "required": [
+                    "op",
+                    "trackIndex",
+                    "timeSeconds"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "op": {
+                      "type": "string",
+                      "const": "moveClip"
+                    },
+                    "clipId": {
+                      "$ref": "#/properties/target/properties/instanceId"
+                    },
+                    "targetTrackIndex": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "targetTimeSeconds": {
+                      "$ref": "#/properties/operations/items/anyOf/0/anyOf/0/properties/timeSeconds"
+                    }
+                  },
+                  "required": [
+                    "op",
+                    "clipId",
+                    "targetTrackIndex",
+                    "targetTimeSeconds"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "op": {
+                      "type": "string",
+                      "const": "trimClip"
+                    },
+                    "clipId": {
+                      "$ref": "#/properties/target/properties/instanceId"
+                    },
+                    "inPoint": {
+                      "$ref": "#/properties/operations/items/anyOf/0/anyOf/0/properties/timeSeconds"
+                    },
+                    "outPoint": {
+                      "$ref": "#/properties/operations/items/anyOf/0/anyOf/0/properties/timeSeconds"
+                    }
+                  },
+                  "required": [
+                    "op",
+                    "clipId",
+                    "inPoint",
+                    "outPoint"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "op": {
+                      "type": "string",
+                      "const": "rippleDelete"
+                    },
+                    "trackIndex": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "startTime": {
+                      "$ref": "#/properties/operations/items/anyOf/0/anyOf/0/properties/timeSeconds"
+                    },
+                    "endTime": {
+                      "$ref": "#/properties/operations/items/anyOf/0/anyOf/0/properties/timeSeconds"
+                    }
+                  },
+                  "required": [
+                    "op",
+                    "trackIndex",
+                    "startTime",
+                    "endTime"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "op": {
+                      "type": "string",
+                      "const": "deleteRange"
+                    },
+                    "trackIndex": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "startTime": {
+                      "$ref": "#/properties/operations/items/anyOf/0/anyOf/0/properties/timeSeconds"
+                    },
+                    "endTime": {
+                      "$ref": "#/properties/operations/items/anyOf/0/anyOf/0/properties/timeSeconds"
+                    },
+                    "ripple": {
+                      "type": "boolean",
+                      "const": false
+                    }
+                  },
+                  "required": [
+                    "op",
+                    "trackIndex",
+                    "startTime",
+                    "endTime",
+                    "ripple"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "op": {
+                      "type": "string",
+                      "const": "applyTransition"
+                    },
+                    "trackIndex": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "clipIdA": {
+                      "$ref": "#/properties/target/properties/instanceId"
+                    },
+                    "clipIdB": {
+                      "$ref": "#/properties/target/properties/instanceId"
+                    },
+                    "edge": {
+                      "type": "string",
+                      "enum": [
+                        "between",
+                        "in",
+                        "out"
+                      ],
+                      "default": "between"
+                    },
+                    "transitionType": {
+                      "type": "string",
+                      "enum": [
+                        "cross-dissolve",
+                        "dip-to-black",
+                        "exponential-fade"
+                      ]
+                    },
+                    "durationSeconds": {
+                      "type": "number",
+                      "exclusiveMinimum": true,
+                      "minimum": 0
+                    }
+                  },
+                  "required": [
+                    "op",
+                    "trackIndex",
+                    "transitionType",
+                    "durationSeconds"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "op": {
+                      "type": "string",
+                      "const": "setVideoTransform"
+                    },
+                    "trackIndex": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "clipIds": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/properties/target/properties/instanceId"
+                      },
+                      "maxItems": 500,
+                      "default": []
+                    },
+                    "positionKeyframes": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "time": {
+                            "$ref": "#/properties/operations/items/anyOf/0/anyOf/0/properties/timeSeconds"
+                          },
+                          "x": {
+                            "type": "number"
+                          },
+                          "y": {
+                            "type": "number"
+                          }
+                        },
+                        "required": [
+                          "time",
+                          "x",
+                          "y"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "minItems": 2,
+                      "maxItems": 5000
+                    },
+                    "scale": {
+                      "type": "number",
+                      "exclusiveMinimum": true,
+                      "minimum": 0
+                    },
+                    "outputAspectRatio": {
+                      "type": "string",
+                      "const": "9:16"
+                    }
+                  },
+                  "required": [
+                    "op",
+                    "trackIndex",
+                    "positionKeyframes",
+                    "scale",
+                    "outputAspectRatio"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "op": {
+                      "type": "string",
+                      "const": "setCropKeyframes"
+                    },
+                    "trackIndex": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "clipIds": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/properties/target/properties/instanceId"
+                      },
+                      "maxItems": 500,
+                      "default": []
+                    },
+                    "keyframes": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "time": {
+                            "$ref": "#/properties/operations/items/anyOf/0/anyOf/0/properties/timeSeconds"
+                          },
+                          "left": {
+                            "type": "number",
+                            "minimum": 0,
+                            "maximum": 1
+                          },
+                          "top": {
+                            "type": "number",
+                            "minimum": 0,
+                            "maximum": 1
+                          },
+                          "right": {
+                            "type": "number",
+                            "minimum": 0,
+                            "maximum": 1
+                          },
+                          "bottom": {
+                            "type": "number",
+                            "minimum": 0,
+                            "maximum": 1
+                          }
+                        },
+                        "required": [
+                          "time",
+                          "left",
+                          "top",
+                          "right",
+                          "bottom"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "minItems": 2,
+                      "maxItems": 5000
+                    },
+                    "outputAspectRatio": {
+                      "type": "string",
+                      "const": "9:16"
+                    }
+                  },
+                  "required": [
+                    "op",
+                    "trackIndex",
+                    "keyframes",
+                    "outputAspectRatio"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "op": {
+                      "type": "string",
+                      "const": "setAudioKeyframes"
+                    },
+                    "trackIndex": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "clipId": {
+                      "$ref": "#/properties/target/properties/instanceId"
+                    },
+                    "gainDb": {
+                      "type": "number",
+                      "minimum": -96,
+                      "maximum": 24
+                    },
+                    "keyframes": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "time": {
+                            "$ref": "#/properties/operations/items/anyOf/0/anyOf/0/properties/timeSeconds"
+                          },
+                          "value": {
+                            "type": "number",
+                            "minimum": -96,
+                            "maximum": 24
+                          }
+                        },
+                        "required": [
+                          "time",
+                          "value"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "maxItems": 5000
+                    }
+                  },
+                  "required": [
+                    "op",
+                    "trackIndex",
+                    "clipId",
+                    "gainDb",
+                    "keyframes"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "op": {
+                      "type": "string",
+                      "const": "addSequenceMarker"
+                    },
+                    "timeSeconds": {
+                      "$ref": "#/properties/operations/items/anyOf/0/anyOf/0/properties/timeSeconds"
+                    },
+                    "name": {
+                      "type": "string",
+                      "maxLength": 512
+                    },
+                    "comment": {
+                      "type": "string",
+                      "maxLength": 4096
+                    },
+                    "markerType": {
+                      "type": "string",
+                      "enum": [
+                        "comment",
+                        "chapter",
+                        "web-link",
+                        "flash-cue",
+                        "segmentation"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "op",
+                    "timeSeconds",
+                    "name",
+                    "comment",
+                    "markerType"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "op": {
+                      "type": "string",
+                      "const": "addCaptionTrack"
+                    },
+                    "subtitles": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "startTime": {
+                            "$ref": "#/properties/operations/items/anyOf/0/anyOf/0/properties/timeSeconds"
+                          },
+                          "endTime": {
+                            "$ref": "#/properties/operations/items/anyOf/0/anyOf/0/properties/timeSeconds"
+                          },
+                          "text": {
+                            "type": "string",
+                            "maxLength": 100000
+                          }
+                        },
+                        "required": [
+                          "startTime",
+                          "endTime",
+                          "text"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "minItems": 1,
+                      "maxItems": 100000
+                    }
+                  },
+                  "required": [
+                    "op",
+                    "subtitles"
+                  ],
+                  "additionalProperties": false
+                }
+              ]
+            },
+            {
+              "type": "object",
+              "properties": {
+                "op": {
+                  "type": "string",
+                  "const": "cutSilences"
+                },
+                "ranges": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "startTime": {
+                        "$ref": "#/properties/operations/items/anyOf/0/anyOf/0/properties/timeSeconds"
+                      },
+                      "endTime": {
+                        "$ref": "#/properties/operations/items/anyOf/0/anyOf/0/properties/timeSeconds"
+                      }
+                    },
+                    "required": [
+                      "startTime",
+                      "endTime"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "minItems": 1,
+                  "maxItems": 10000
+                },
+                "trackIndices": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "minItems": 1,
+                  "maxItems": 1000
+                },
+                "ripple": {
+                  "type": "boolean",
+                  "default": true
+                }
+              },
+              "required": [
+                "op",
+                "ranges",
+                "trackIndices"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "op": {
+                  "type": "string",
+                  "const": "autoDucking"
+                },
+                "voiceTrackIndices": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "minItems": 1,
+                  "maxItems": 100
+                },
+                "musicTrackIndices": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "minItems": 1,
+                  "maxItems": 100
+                },
+                "musicClipIds": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/properties/target/properties/instanceId"
+                  },
+                  "maxItems": 10000,
+                  "default": []
+                },
+                "voiceRanges": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "startTime": {
+                        "$ref": "#/properties/operations/items/anyOf/0/anyOf/0/properties/timeSeconds"
+                      },
+                      "endTime": {
+                        "$ref": "#/properties/operations/items/anyOf/0/anyOf/0/properties/timeSeconds"
+                      }
+                    },
+                    "required": [
+                      "startTime",
+                      "endTime"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "default": []
+                },
+                "attenuationDb": {
+                  "type": "number",
+                  "minimum": -96,
+                  "maximum": 0
+                },
+                "attackSeconds": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 60
+                },
+                "releaseSeconds": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 60
+                },
+                "threshold": {
+                  "type": "number",
+                  "minimum": -96,
+                  "maximum": 24,
+                  "default": -24
+                }
+              },
+              "required": [
+                "op",
+                "voiceTrackIndices",
+                "musicTrackIndices",
+                "attenuationDb",
+                "attackSeconds",
+                "releaseSeconds"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "op": {
+                  "type": "string",
+                  "const": "autoReframe"
+                },
+                "aspectRatio": {
+                  "type": "string",
+                  "const": "9:16"
+                },
+                "horizontalKeyframes": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "time": {
+                        "$ref": "#/properties/operations/items/anyOf/0/anyOf/0/properties/timeSeconds"
+                      },
+                      "position": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1
+                      }
+                    },
+                    "required": [
+                      "time",
+                      "position"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "minItems": 2,
+                  "maxItems": 5000
+                },
+                "sourceWidth": {
+                  "type": "integer",
+                  "exclusiveMinimum": true,
+                  "minimum": 0
+                },
+                "sourceHeight": {
+                  "type": "integer",
+                  "exclusiveMinimum": true,
+                  "minimum": 0
+                },
+                "trackIndex": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "default": 0
+                },
+                "clipIds": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/properties/target/properties/instanceId"
+                  },
+                  "maxItems": 500,
+                  "default": []
+                }
+              },
+              "required": [
+                "op",
+                "aspectRatio",
+                "horizontalKeyframes",
+                "sourceWidth",
+                "sourceHeight"
+              ],
+              "additionalProperties": false
+            }
+          ]
+        },
+        "minItems": 1,
+        "maxItems": 500
+      },
+      "options": {
+        "type": "object",
+        "properties": {
+          "operationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "expectedRevision": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "dryRun": {
+            "type": "boolean",
+            "default": false
+          },
+          "atomic": {
+            "type": "boolean",
+            "default": true
+          },
+          "conflictPolicy": {
+            "type": "string",
+            "enum": [
+              "fail",
+              "rebase-safe"
+            ],
+            "default": "fail"
+          },
+          "verification": {
+            "type": "string",
+            "enum": [
+              "none",
+              "state",
+              "render-proof"
+            ],
+            "default": "state"
+          },
+          "approvalToken": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          },
+          "explicitConfirmation": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "operationId"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "required": [
+      "version",
+      "target",
+      "operations",
+      "options"
+    ],
+    "additionalProperties": false,
+    "$schema": "https://json-schema.org/draft/2020-12/schema"
+  },
+  "PremiereEditPlanResult": {
+    "type": "object",
+    "properties": {
+      "appliedOperations": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 500
+      },
+      "timelineRevision": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 128
+      },
+      "summary": {
+        "type": "object",
+        "additionalProperties": {}
+      }
+    },
+    "required": [
+      "appliedOperations",
+      "timelineRevision",
+      "summary"
+    ],
+    "additionalProperties": false,
+    "$schema": "https://json-schema.org/draft/2020-12/schema"
+  },
+  "PremiereEffectCommand": {
+    "anyOf": [
+      {
+        "type": "object",
+        "properties": {
+          "op": {
+            "type": "string",
+            "const": "set"
+          },
+          "clipId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "effectId": {
+            "$ref": "#/anyOf/0/properties/clipId"
+          },
+          "propertyPath": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            },
+            "minItems": 1,
+            "maxItems": 16
+          },
+          "value": {}
+        },
+        "required": [
+          "op",
+          "clipId",
+          "effectId",
+          "propertyPath"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "op": {
+            "type": "string",
+            "const": "set-keyframes"
+          },
+          "clipId": {
+            "$ref": "#/anyOf/0/properties/clipId"
+          },
+          "effectId": {
+            "$ref": "#/anyOf/0/properties/clipId"
+          },
+          "propertyPath": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            },
+            "minItems": 1,
+            "maxItems": 16
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "merge",
+              "replace-range"
+            ]
+          },
+          "keyframes": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "time": {
+                  "type": "object",
+                  "properties": {
+                    "ticks": {
+                      "type": "string",
+                      "pattern": "^-?\\d+$",
+                      "maxLength": 32
+                    },
+                    "timebase": {
+                      "type": "string",
+                      "pattern": "^[1-9]\\d*$",
+                      "maxLength": 12
+                    }
+                  },
+                  "required": [
+                    "ticks",
+                    "timebase"
+                  ],
+                  "additionalProperties": false
+                },
+                "value": {},
+                "interpolation": {
+                  "type": "string",
+                  "enum": [
+                    "linear",
+                    "bezier",
+                    "hold"
+                  ]
+                }
+              },
+              "required": [
+                "time",
+                "interpolation"
+              ],
+              "additionalProperties": false
+            },
+            "minItems": 1,
+            "maxItems": 5000
+          }
+        },
+        "required": [
+          "op",
+          "clipId",
+          "effectId",
+          "propertyPath",
+          "mode",
+          "keyframes"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "op": {
+            "type": "string",
+            "const": "remove"
+          },
+          "clipId": {
+            "$ref": "#/anyOf/0/properties/clipId"
+          },
+          "effectId": {
+            "$ref": "#/anyOf/0/properties/clipId"
+          }
+        },
+        "required": [
+          "op",
+          "clipId",
+          "effectId"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "op": {
+            "type": "string",
+            "const": "apply"
+          },
+          "clipIds": {
+            "type": "array",
+            "items": {
+              "$ref": "#/anyOf/0/properties/clipId"
+            },
+            "minItems": 1,
+            "maxItems": 500
+          },
+          "effectId": {
+            "$ref": "#/anyOf/0/properties/clipId"
+          },
+          "parameters": {
+            "type": "object",
+            "additionalProperties": {},
+            "propertyNames": {
+              "maxLength": 128
+            },
+            "default": {}
+          }
+        },
+        "required": [
+          "op",
+          "clipIds",
+          "effectId"
+        ],
+        "additionalProperties": false
+      }
+    ],
+    "$schema": "https://json-schema.org/draft/2020-12/schema"
+  },
+  "PremiereMarkerCommand": {
+    "anyOf": [
+      {
+        "type": "object",
+        "properties": {
+          "op": {
+            "type": "string",
+            "const": "create"
+          },
+          "tempId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "start": {
+            "type": "object",
+            "properties": {
+              "ticks": {
+                "type": "string",
+                "pattern": "^-?\\d+$",
+                "maxLength": 32
+              },
+              "timebase": {
+                "type": "string",
+                "pattern": "^[1-9]\\d*$",
+                "maxLength": 12
+              }
+            },
+            "required": [
+              "ticks",
+              "timebase"
+            ],
+            "additionalProperties": false
+          },
+          "duration": {
+            "$ref": "#/anyOf/0/properties/start"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 512
+          },
+          "comment": {
+            "type": "string",
+            "maxLength": 4096
+          },
+          "color": {
+            "type": "object",
+            "properties": {
+              "space": {
+                "type": "string",
+                "enum": [
+                  "rgb",
+                  "cmyk",
+                  "lab",
+                  "gray"
+                ]
+              },
+              "components": {
+                "type": "array",
+                "items": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "minItems": 1,
+                "maxItems": 4
+              },
+              "alpha": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1,
+                "default": 1
+              }
+            },
+            "required": [
+              "space",
+              "components"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "op",
+          "tempId",
+          "start",
+          "duration"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "op": {
+            "type": "string",
+            "const": "update"
+          },
+          "markerId": {
+            "$ref": "#/anyOf/0/properties/tempId"
+          },
+          "start": {
+            "$ref": "#/anyOf/0/properties/start"
+          },
+          "duration": {
+            "$ref": "#/anyOf/0/properties/start"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 512
+          },
+          "comment": {
+            "type": "string",
+            "maxLength": 4096
+          },
+          "color": {
+            "$ref": "#/anyOf/0/properties/color"
+          }
+        },
+        "required": [
+          "op",
+          "markerId"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "op": {
+            "type": "string",
+            "const": "delete"
+          },
+          "markerIds": {
+            "type": "array",
+            "items": {
+              "$ref": "#/anyOf/0/properties/tempId"
+            },
+            "minItems": 1,
+            "maxItems": 500
+          },
+          "permanent": {
+            "type": "boolean",
+            "const": false,
+            "default": false
+          }
+        },
+        "required": [
+          "op",
+          "markerIds"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "op": {
+            "type": "string",
+            "const": "add"
+          },
+          "sequenceId": {
+            "$ref": "#/anyOf/0/properties/tempId"
+          },
+          "start": {
+            "$ref": "#/anyOf/0/properties/start"
+          },
+          "duration": {
+            "$ref": "#/anyOf/0/properties/start"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 512
+          },
+          "comment": {
+            "type": "string",
+            "maxLength": 4096
+          }
+        },
+        "required": [
+          "op",
+          "sequenceId",
+          "start",
+          "duration",
+          "name"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "op": {
+            "type": "string",
+            "const": "remove"
+          },
+          "markerId": {
+            "$ref": "#/anyOf/0/properties/tempId"
+          }
+        },
+        "required": [
+          "op",
+          "markerId"
+        ],
+        "additionalProperties": false
+      }
+    ],
+    "$schema": "https://json-schema.org/draft/2020-12/schema"
+  },
+  "PremiereProjectCommand": {
+    "anyOf": [
+      {
+        "type": "object",
+        "properties": {
+          "op": {
+            "type": "string",
+            "const": "import"
+          },
+          "grantId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "artifactId": {
+            "$ref": "#/anyOf/0/properties/grantId"
+          },
+          "binId": {
+            "$ref": "#/anyOf/0/properties/grantId"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 512
+          }
+        },
+        "required": [
+          "op"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "op": {
+            "type": "string",
+            "const": "create-bin"
+          },
+          "tempId": {
+            "$ref": "#/anyOf/0/properties/grantId"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512
+          },
+          "parentBinId": {
+            "$ref": "#/anyOf/0/properties/grantId"
+          }
+        },
+        "required": [
+          "op",
+          "tempId",
+          "name"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "op": {
+            "type": "string",
+            "const": "move"
+          },
+          "projectItemIds": {
+            "type": "array",
+            "items": {
+              "$ref": "#/anyOf/0/properties/grantId"
+            },
+            "minItems": 1,
+            "maxItems": 500
+          },
+          "binId": {
+            "$ref": "#/anyOf/0/properties/grantId"
+          }
+        },
+        "required": [
+          "op",
+          "projectItemIds",
+          "binId"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "op": {
+            "type": "string",
+            "const": "rename"
+          },
+          "projectItemId": {
+            "$ref": "#/anyOf/0/properties/grantId"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512
+          }
+        },
+        "required": [
+          "op",
+          "projectItemId",
+          "name"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "op": {
+            "type": "string",
+            "const": "save-copy"
+          },
+          "destination": {
+            "type": "object",
+            "properties": {
+              "grantId": {
+                "$ref": "#/anyOf/0/properties/grantId"
+              },
+              "access": {
+                "type": "string",
+                "enum": [
+                  "read",
+                  "write",
+                  "read-write"
+                ]
+              },
+              "suggestedName": {
+                "type": "string",
+                "maxLength": 255
+              }
+            },
+            "required": [
+              "grantId",
+              "access"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "op",
+          "destination"
+        ],
+        "additionalProperties": false
+      }
+    ],
+    "$schema": "https://json-schema.org/draft/2020-12/schema"
+  },
+  "PremiereSequenceCommand": {
+    "anyOf": [
+      {
+        "type": "object",
+        "properties": {
+          "op": {
+            "type": "string",
+            "const": "create"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512
+          },
+          "width": {
+            "type": "integer",
+            "exclusiveMinimum": true,
+            "minimum": 0
+          },
+          "height": {
+            "type": "integer",
+            "exclusiveMinimum": true,
+            "minimum": 0
+          },
+          "frameRate": {
+            "type": "number",
+            "exclusiveMinimum": true,
+            "minimum": 0
+          }
+        },
+        "required": [
+          "op",
+          "name",
+          "width",
+          "height",
+          "frameRate"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "op": {
+            "type": "string",
+            "const": "delete"
+          },
+          "sequenceId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "permanent": {
+            "type": "boolean",
+            "const": false,
+            "default": false
+          }
+        },
+        "required": [
+          "op",
+          "sequenceId"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "op": {
+            "type": "string",
+            "const": "set-sequence"
+          },
+          "patch": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 512
+              },
+              "frameRate": {
+                "type": "number",
+                "exclusiveMinimum": true,
+                "minimum": 0
+              },
+              "width": {
+                "type": "integer",
+                "exclusiveMinimum": true,
+                "minimum": 0
+              },
+              "height": {
+                "type": "integer",
+                "exclusiveMinimum": true,
+                "minimum": 0
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "op",
+          "patch"
+        ],
+        "additionalProperties": false
+      }
+    ],
+    "$schema": "https://json-schema.org/draft/2020-12/schema"
+  },
+  "PremiereTimelineCommand": {
+    "anyOf": [
+      {
+        "type": "object",
+        "properties": {
+          "op": {
+            "type": "string",
+            "const": "insert"
+          },
+          "projectItemId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "trackId": {
+            "$ref": "#/anyOf/0/properties/projectItemId"
+          },
+          "at": {
+            "type": "object",
+            "properties": {
+              "ticks": {
+                "type": "string",
+                "pattern": "^-?\\d+$",
+                "maxLength": 32
+              },
+              "timebase": {
+                "type": "string",
+                "pattern": "^[1-9]\\d*$",
+                "maxLength": 12
+              }
+            },
+            "required": [
+              "ticks",
+              "timebase"
+            ],
+            "additionalProperties": false
+          },
+          "sourceIn": {
+            "$ref": "#/anyOf/0/properties/at"
+          },
+          "sourceOut": {
+            "$ref": "#/anyOf/0/properties/at"
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "insert",
+              "overwrite"
+            ]
+          }
+        },
+        "required": [
+          "op",
+          "projectItemId",
+          "trackId",
+          "at",
+          "mode"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "op": {
+            "type": "string",
+            "const": "move"
+          },
+          "clipIds": {
+            "type": "array",
+            "items": {
+              "$ref": "#/anyOf/0/properties/projectItemId"
+            },
+            "minItems": 1,
+            "maxItems": 500
+          },
+          "delta": {
+            "$ref": "#/anyOf/0/properties/at"
+          },
+          "targetTrackId": {
+            "$ref": "#/anyOf/0/properties/projectItemId"
+          }
+        },
+        "required": [
+          "op",
+          "clipIds",
+          "delta"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "op": {
+            "type": "string",
+            "const": "trim"
+          },
+          "clipId": {
+            "$ref": "#/anyOf/0/properties/projectItemId"
+          },
+          "edge": {
+            "type": "string",
+            "enum": [
+              "in",
+              "out"
+            ]
+          },
+          "to": {
+            "$ref": "#/anyOf/0/properties/at"
+          },
+          "ripple": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "op",
+          "clipId",
+          "edge",
+          "to",
+          "ripple"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "op": {
+            "type": "string",
+            "const": "cut"
+          },
+          "trackIds": {
+            "type": "array",
+            "items": {
+              "$ref": "#/anyOf/0/properties/projectItemId"
+            },
+            "minItems": 1,
+            "maxItems": 500
+          },
+          "at": {
+            "$ref": "#/anyOf/0/properties/at"
+          }
+        },
+        "required": [
+          "op",
+          "trackIds",
+          "at"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "op": {
+            "type": "string",
+            "const": "delete"
+          },
+          "clipIds": {
+            "type": "array",
+            "items": {
+              "$ref": "#/anyOf/0/properties/projectItemId"
+            },
+            "minItems": 1,
+            "maxItems": 500
+          },
+          "ripple": {
+            "type": "boolean"
+          },
+          "permanent": {
+            "type": "boolean",
+            "const": false,
+            "default": false
+          }
+        },
+        "required": [
+          "op",
+          "clipIds",
+          "ripple"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "op": {
+            "type": "string",
+            "const": "slip"
+          },
+          "clipId": {
+            "$ref": "#/anyOf/0/properties/projectItemId"
+          },
+          "delta": {
+            "$ref": "#/anyOf/0/properties/at"
+          }
+        },
+        "required": [
+          "op",
+          "clipId",
+          "delta"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "op": {
+            "type": "string",
+            "const": "ripple-delete"
+          },
+          "clipIds": {
+            "type": "array",
+            "items": {
+              "$ref": "#/anyOf/0/properties/projectItemId"
+            },
+            "minItems": 1,
+            "maxItems": 500
+          }
+        },
+        "required": [
+          "op",
+          "clipIds"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "op": {
+            "type": "string",
+            "const": "speed"
+          },
+          "clipId": {
+            "$ref": "#/anyOf/0/properties/projectItemId"
+          },
+          "speed": {
+            "type": "number",
+            "exclusiveMinimum": true,
+            "minimum": 0,
+            "maximum": 1000
+          }
+        },
+        "required": [
+          "op",
+          "clipId",
+          "speed"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "op": {
+            "type": "string",
+            "const": "mute"
+          },
+          "clipIds": {
+            "type": "array",
+            "items": {
+              "$ref": "#/anyOf/0/properties/projectItemId"
+            },
+            "minItems": 1,
+            "maxItems": 500
+          },
+          "muted": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "op",
+          "clipIds",
+          "muted"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "op": {
+            "type": "string",
+            "const": "overwrite"
+          },
+          "projectItemId": {
+            "$ref": "#/anyOf/0/properties/projectItemId"
+          },
+          "trackId": {
+            "$ref": "#/anyOf/0/properties/projectItemId"
+          },
+          "at": {
+            "$ref": "#/anyOf/0/properties/at"
+          },
+          "sourceIn": {
+            "$ref": "#/anyOf/0/properties/at"
+          },
+          "sourceOut": {
+            "$ref": "#/anyOf/0/properties/at"
+          }
+        },
+        "required": [
+          "op",
+          "projectItemId",
+          "trackId",
+          "at"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "op": {
+            "type": "string",
+            "const": "splitClip"
+          },
+          "trackIndex": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "timeSeconds": {
+            "type": "number",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "op",
+          "trackIndex",
+          "timeSeconds"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "op": {
+            "type": "string",
+            "const": "moveClip"
+          },
+          "clipId": {
+            "$ref": "#/anyOf/0/properties/projectItemId"
+          },
+          "targetTrackIndex": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "targetTimeSeconds": {
+            "$ref": "#/anyOf/10/properties/timeSeconds"
+          }
+        },
+        "required": [
+          "op",
+          "clipId",
+          "targetTrackIndex",
+          "targetTimeSeconds"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "op": {
+            "type": "string",
+            "const": "trimClip"
+          },
+          "clipId": {
+            "$ref": "#/anyOf/0/properties/projectItemId"
+          },
+          "inPoint": {
+            "$ref": "#/anyOf/10/properties/timeSeconds"
+          },
+          "outPoint": {
+            "$ref": "#/anyOf/10/properties/timeSeconds"
+          }
+        },
+        "required": [
+          "op",
+          "clipId",
+          "inPoint",
+          "outPoint"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "op": {
+            "type": "string",
+            "const": "rippleDelete"
+          },
+          "trackIndex": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "startTime": {
+            "$ref": "#/anyOf/10/properties/timeSeconds"
+          },
+          "endTime": {
+            "$ref": "#/anyOf/10/properties/timeSeconds"
+          }
+        },
+        "required": [
+          "op",
+          "trackIndex",
+          "startTime",
+          "endTime"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "op": {
+            "type": "string",
+            "const": "applyTransition"
+          },
+          "trackIndex": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "clipIdA": {
+            "$ref": "#/anyOf/0/properties/projectItemId"
+          },
+          "clipIdB": {
+            "$ref": "#/anyOf/0/properties/projectItemId"
+          },
+          "transitionType": {
+            "type": "string",
+            "enum": [
+              "cross-dissolve",
+              "dip-to-black",
+              "exponential-fade"
+            ]
+          },
+          "durationSeconds": {
+            "type": "number",
+            "exclusiveMinimum": true,
+            "minimum": 0
+          }
+        },
+        "required": [
+          "op",
+          "trackIndex",
+          "clipIdA",
+          "clipIdB",
+          "transitionType",
+          "durationSeconds"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "op": {
+            "type": "string",
+            "const": "setAudioKeyframes"
+          },
+          "trackIndex": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "clipId": {
+            "$ref": "#/anyOf/0/properties/projectItemId"
+          },
+          "gainDb": {
+            "type": "number",
+            "minimum": -96,
+            "maximum": 24
+          },
+          "keyframes": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "time": {
+                  "$ref": "#/anyOf/10/properties/timeSeconds"
+                },
+                "value": {
+                  "type": "number",
+                  "minimum": -96,
+                  "maximum": 24
+                }
+              },
+              "required": [
+                "time",
+                "value"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "op",
+          "trackIndex",
+          "clipId",
+          "gainDb",
+          "keyframes"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "op": {
+            "type": "string",
+            "const": "addSequenceMarker"
+          },
+          "timeSeconds": {
+            "$ref": "#/anyOf/10/properties/timeSeconds"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 512
+          },
+          "comment": {
+            "type": "string",
+            "maxLength": 4096
+          },
+          "markerType": {
+            "type": "string",
+            "enum": [
+              "comment",
+              "chapter",
+              "web-link",
+              "flash-cue",
+              "segmentation"
+            ]
+          }
+        },
+        "required": [
+          "op",
+          "timeSeconds",
+          "name",
+          "comment",
+          "markerType"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "op": {
+            "type": "string",
+            "const": "addCaptionTrack"
+          },
+          "subtitles": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "startTime": {
+                  "$ref": "#/anyOf/10/properties/timeSeconds"
+                },
+                "endTime": {
+                  "$ref": "#/anyOf/10/properties/timeSeconds"
+                },
+                "text": {
+                  "type": "string",
+                  "maxLength": 100000
+                }
+              },
+              "required": [
+                "startTime",
+                "endTime",
+                "text"
+              ],
+              "additionalProperties": false
+            },
+            "minItems": 1,
+            "maxItems": 100000
+          }
+        },
+        "required": [
+          "op",
+          "subtitles"
+        ],
+        "additionalProperties": false
+      }
+    ],
+    "$schema": "https://json-schema.org/draft/2020-12/schema"
+  },
+  "PremiereTimelineOperation": {
+    "anyOf": [
+      {
+        "type": "object",
+        "properties": {
+          "op": {
+            "type": "string",
+            "const": "splitClip"
+          },
+          "trackIndex": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "timeSeconds": {
+            "type": "number",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "op",
+          "trackIndex",
+          "timeSeconds"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "op": {
+            "type": "string",
+            "const": "moveClip"
+          },
+          "clipId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "targetTrackIndex": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "targetTimeSeconds": {
+            "$ref": "#/anyOf/0/properties/timeSeconds"
+          }
+        },
+        "required": [
+          "op",
+          "clipId",
+          "targetTrackIndex",
+          "targetTimeSeconds"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "op": {
+            "type": "string",
+            "const": "trimClip"
+          },
+          "clipId": {
+            "$ref": "#/anyOf/1/properties/clipId"
+          },
+          "inPoint": {
+            "$ref": "#/anyOf/0/properties/timeSeconds"
+          },
+          "outPoint": {
+            "$ref": "#/anyOf/0/properties/timeSeconds"
+          }
+        },
+        "required": [
+          "op",
+          "clipId",
+          "inPoint",
+          "outPoint"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "op": {
+            "type": "string",
+            "const": "rippleDelete"
+          },
+          "trackIndex": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "startTime": {
+            "$ref": "#/anyOf/0/properties/timeSeconds"
+          },
+          "endTime": {
+            "$ref": "#/anyOf/0/properties/timeSeconds"
+          }
+        },
+        "required": [
+          "op",
+          "trackIndex",
+          "startTime",
+          "endTime"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "op": {
+            "type": "string",
+            "const": "deleteRange"
+          },
+          "trackIndex": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "startTime": {
+            "$ref": "#/anyOf/0/properties/timeSeconds"
+          },
+          "endTime": {
+            "$ref": "#/anyOf/0/properties/timeSeconds"
+          },
+          "ripple": {
+            "type": "boolean",
+            "const": false
+          }
+        },
+        "required": [
+          "op",
+          "trackIndex",
+          "startTime",
+          "endTime",
+          "ripple"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "op": {
+            "type": "string",
+            "const": "applyTransition"
+          },
+          "trackIndex": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "clipIdA": {
+            "$ref": "#/anyOf/1/properties/clipId"
+          },
+          "clipIdB": {
+            "$ref": "#/anyOf/1/properties/clipId"
+          },
+          "edge": {
+            "type": "string",
+            "enum": [
+              "between",
+              "in",
+              "out"
+            ],
+            "default": "between"
+          },
+          "transitionType": {
+            "type": "string",
+            "enum": [
+              "cross-dissolve",
+              "dip-to-black",
+              "exponential-fade"
+            ]
+          },
+          "durationSeconds": {
+            "type": "number",
+            "exclusiveMinimum": true,
+            "minimum": 0
+          }
+        },
+        "required": [
+          "op",
+          "trackIndex",
+          "transitionType",
+          "durationSeconds"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "op": {
+            "type": "string",
+            "const": "setVideoTransform"
+          },
+          "trackIndex": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "clipIds": {
+            "type": "array",
+            "items": {
+              "$ref": "#/anyOf/1/properties/clipId"
+            },
+            "maxItems": 500,
+            "default": []
+          },
+          "positionKeyframes": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "time": {
+                  "$ref": "#/anyOf/0/properties/timeSeconds"
+                },
+                "x": {
+                  "type": "number"
+                },
+                "y": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "time",
+                "x",
+                "y"
+              ],
+              "additionalProperties": false
+            },
+            "minItems": 2,
+            "maxItems": 5000
+          },
+          "scale": {
+            "type": "number",
+            "exclusiveMinimum": true,
+            "minimum": 0
+          },
+          "outputAspectRatio": {
+            "type": "string",
+            "const": "9:16"
+          }
+        },
+        "required": [
+          "op",
+          "trackIndex",
+          "positionKeyframes",
+          "scale",
+          "outputAspectRatio"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "op": {
+            "type": "string",
+            "const": "setCropKeyframes"
+          },
+          "trackIndex": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "clipIds": {
+            "type": "array",
+            "items": {
+              "$ref": "#/anyOf/1/properties/clipId"
+            },
+            "maxItems": 500,
+            "default": []
+          },
+          "keyframes": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "time": {
+                  "$ref": "#/anyOf/0/properties/timeSeconds"
+                },
+                "left": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "top": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "right": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "bottom": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                }
+              },
+              "required": [
+                "time",
+                "left",
+                "top",
+                "right",
+                "bottom"
+              ],
+              "additionalProperties": false
+            },
+            "minItems": 2,
+            "maxItems": 5000
+          },
+          "outputAspectRatio": {
+            "type": "string",
+            "const": "9:16"
+          }
+        },
+        "required": [
+          "op",
+          "trackIndex",
+          "keyframes",
+          "outputAspectRatio"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "op": {
+            "type": "string",
+            "const": "setAudioKeyframes"
+          },
+          "trackIndex": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "clipId": {
+            "$ref": "#/anyOf/1/properties/clipId"
+          },
+          "gainDb": {
+            "type": "number",
+            "minimum": -96,
+            "maximum": 24
+          },
+          "keyframes": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "time": {
+                  "$ref": "#/anyOf/0/properties/timeSeconds"
+                },
+                "value": {
+                  "type": "number",
+                  "minimum": -96,
+                  "maximum": 24
+                }
+              },
+              "required": [
+                "time",
+                "value"
+              ],
+              "additionalProperties": false
+            },
+            "maxItems": 5000
+          }
+        },
+        "required": [
+          "op",
+          "trackIndex",
+          "clipId",
+          "gainDb",
+          "keyframes"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "op": {
+            "type": "string",
+            "const": "addSequenceMarker"
+          },
+          "timeSeconds": {
+            "$ref": "#/anyOf/0/properties/timeSeconds"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 512
+          },
+          "comment": {
+            "type": "string",
+            "maxLength": 4096
+          },
+          "markerType": {
+            "type": "string",
+            "enum": [
+              "comment",
+              "chapter",
+              "web-link",
+              "flash-cue",
+              "segmentation"
+            ]
+          }
+        },
+        "required": [
+          "op",
+          "timeSeconds",
+          "name",
+          "comment",
+          "markerType"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "op": {
+            "type": "string",
+            "const": "addCaptionTrack"
+          },
+          "subtitles": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "startTime": {
+                  "$ref": "#/anyOf/0/properties/timeSeconds"
+                },
+                "endTime": {
+                  "$ref": "#/anyOf/0/properties/timeSeconds"
+                },
+                "text": {
+                  "type": "string",
+                  "maxLength": 100000
+                }
+              },
+              "required": [
+                "startTime",
+                "endTime",
+                "text"
+              ],
+              "additionalProperties": false
+            },
+            "minItems": 1,
+            "maxItems": 100000
+          }
+        },
+        "required": [
+          "op",
+          "subtitles"
+        ],
+        "additionalProperties": false
+      }
+    ],
+    "$schema": "https://json-schema.org/draft/2020-12/schema"
+  },
+  "Preset": {
+    "type": "object",
+    "properties": {
+      "id": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 256
+      },
+      "kind": {
+        "type": "string",
+        "enum": [
+          "lut",
+          "typography",
+          "animation"
+        ]
+      },
+      "name": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 512
+      },
+      "version": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 64
+      },
+      "payload": {
+        "type": "object",
+        "additionalProperties": {},
+        "propertyNames": {
+          "maxLength": 128
+        }
+      },
+      "sha256": {
+        "type": "string",
+        "pattern": "^[a-f0-9]{64}$"
+      }
+    },
+    "required": [
+      "id",
+      "kind",
+      "name",
+      "version",
+      "payload",
+      "sha256"
+    ],
+    "additionalProperties": false,
+    "$schema": "https://json-schema.org/draft/2020-12/schema"
+  },
+  "PsDocumentState": {
+    "type": "object",
+    "properties": {
+      "id": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 256
+      },
+      "revision": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 128
+      },
+      "name": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 512
+      },
+      "saved": {
+        "type": "boolean"
+      },
+      "width": {
+        "type": "number",
+        "exclusiveMinimum": true,
+        "minimum": 0
+      },
+      "height": {
+        "type": "number",
+        "exclusiveMinimum": true,
+        "minimum": 0
+      },
+      "unit": {
+        "type": "string",
+        "enum": [
+          "px",
+          "pt",
+          "mm",
+          "in"
+        ]
+      },
+      "resolutionPpi": {
+        "type": "number",
+        "exclusiveMinimum": true,
+        "minimum": 0
+      },
+      "mode": {
+        "type": "string",
+        "enum": [
+          "bitmap",
+          "grayscale",
+          "rgb",
+          "cmyk",
+          "lab",
+          "multichannel",
+          "duotone",
+          "indexed"
+        ]
+      },
+      "bitDepth": {
+        "type": "number",
+        "enum": [
+          8,
+          16,
+          32
+        ]
+      },
+      "activeLayerIds": {
+        "type": "array",
+        "items": {
+          "$ref": "#/properties/id"
+        },
+        "maxItems": 10000
+      },
+      "layers": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "$ref": "#/properties/id"
+            },
+            "name": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 512
+            },
+            "kind": {
+              "type": "string",
+              "enum": [
+                "pixel",
+                "text",
+                "shape",
+                "group",
+                "adjustment",
+                "smart-object",
+                "fill",
+                "unknown"
+              ]
+            },
+            "parentId": {
+              "anyOf": [
+                {
+                  "$ref": "#/properties/id"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "visible": {
+              "type": "boolean"
+            },
+            "locked": {
+              "type": "boolean"
+            },
+            "opacity": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "blendMode": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            },
+            "bounds": {
+              "type": "object",
+              "properties": {
+                "x": {
+                  "type": "number"
+                },
+                "y": {
+                  "type": "number"
+                },
+                "width": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "height": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "unit": {
+                  "type": "string",
+                  "enum": [
+                    "px",
+                    "pt",
+                    "mm",
+                    "in"
+                  ]
+                }
+              },
+              "required": [
+                "x",
+                "y",
+                "width",
+                "height",
+                "unit"
+              ],
+              "additionalProperties": false
+            },
+            "selected": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "id",
+            "name",
+            "kind",
+            "parentId",
+            "visible",
+            "locked",
+            "opacity",
+            "blendMode",
+            "bounds",
+            "selected"
+          ],
+          "additionalProperties": false
+        },
+        "maxItems": 10000
+      },
+      "truncated": {
+        "type": "boolean"
+      },
+      "nextCursor": {
+        "type": "string",
+        "maxLength": 2048
+      }
+    },
+    "required": [
+      "id",
+      "revision",
+      "name",
+      "saved",
+      "width",
+      "height",
+      "unit",
+      "resolutionPpi",
+      "mode",
+      "bitDepth",
+      "activeLayerIds",
+      "layers",
+      "truncated"
+    ],
+    "additionalProperties": false,
+    "$schema": "https://json-schema.org/draft/2020-12/schema"
+  },
+  "RationalTime": {
+    "type": "object",
+    "properties": {
+      "ticks": {
+        "type": "string",
+        "pattern": "^-?\\d+$",
+        "maxLength": 32
+      },
+      "timebase": {
+        "type": "string",
+        "pattern": "^[1-9]\\d*$",
+        "maxLength": 12
+      }
+    },
+    "required": [
+      "ticks",
+      "timebase"
+    ],
+    "additionalProperties": false,
+    "$schema": "https://json-schema.org/draft/2020-12/schema"
+  },
+  "ReadOptions": {
+    "type": "object",
+    "properties": {
+      "fields": {
+        "type": "array",
+        "items": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "maxItems": 64
+      },
+      "depth": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 4,
+        "default": 1
+      },
+      "page": {
+        "type": "object",
+        "properties": {
+          "cursor": {
+            "type": "string",
+            "maxLength": 2048
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 200,
+            "default": 50
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "additionalProperties": false,
+    "$schema": "https://json-schema.org/draft/2020-12/schema"
+  },
+  "ResolvedFileGrant": {
+    "type": "object",
+    "properties": {
+      "grantId": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 256
+      },
+      "access": {
+        "type": "string",
+        "enum": [
+          "read",
+          "write",
+          "read-write"
+        ]
+      },
+      "suggestedName": {
+        "type": "string",
+        "maxLength": 255
+      },
+      "canonicalPath": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 4096
+      },
+      "expiresAt": {
+        "type": "string",
+        "format": "date-time"
+      },
+      "issuedAt": {
+        "type": "string",
+        "format": "date-time"
+      }
+    },
+    "required": [
+      "grantId",
+      "access",
+      "canonicalPath",
+      "expiresAt",
+      "issuedAt"
+    ],
+    "additionalProperties": false,
+    "$schema": "https://json-schema.org/draft/2020-12/schema"
+  },
+  "SagaDefinition": {
+    "type": "object",
+    "properties": {
+      "id": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 256
+      },
+      "version": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 64
+      },
+      "steps": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "$ref": "#/properties/id"
+            },
+            "app": {
+              "type": "string",
+              "enum": [
+                "photoshop",
+                "illustrator",
+                "after-effects",
+                "premiere-pro"
+              ]
+            },
+            "tool": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            "input": {},
+            "compensateTool": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            "idempotencyKey": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            }
+          },
+          "required": [
+            "id",
+            "app",
+            "tool",
+            "idempotencyKey"
+          ],
+          "additionalProperties": false
+        },
+        "minItems": 1,
+        "maxItems": 100
+      }
+    },
+    "required": [
+      "id",
+      "version",
+      "steps"
+    ],
+    "additionalProperties": false,
+    "$schema": "https://json-schema.org/draft/2020-12/schema"
+  },
+  "Snapshot": {
+    "type": "object",
+    "properties": {
+      "id": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 256
+      },
+      "target": {
+        "type": "object",
+        "properties": {
+          "app": {
+            "type": "string",
+            "enum": [
+              "photoshop",
+              "illustrator",
+              "after-effects",
+              "premiere-pro"
+            ]
+          },
+          "instanceId": {
+            "$ref": "#/properties/id"
+          },
+          "projectId": {
+            "$ref": "#/properties/id"
+          },
+          "documentId": {
+            "$ref": "#/properties/id"
+          },
+          "entityId": {
+            "$ref": "#/properties/id"
+          }
+        },
+        "required": [
+          "app"
+        ],
+        "additionalProperties": false
+      },
+      "revision": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 128
+      },
+      "createdAt": {
+        "type": "string",
+        "format": "date-time"
+      },
+      "sha256": {
+        "type": "string",
+        "pattern": "^[a-f0-9]{64}$"
+      },
+      "artifact": {
+        "type": "object",
+        "properties": {
+          "artifactId": {
+            "$ref": "#/properties/id"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "file",
+              "directory",
+              "snapshot",
+              "preview",
+              "report"
+            ]
+          },
+          "displayName": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255
+          },
+          "mediaType": {
+            "type": "string",
+            "maxLength": 256
+          },
+          "sizeBytes": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "provenance": {
+            "type": "object",
+            "properties": {
+              "sourceOperationId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "sourceArtifactId": {
+                "$ref": "#/properties/id"
+              },
+              "app": {
+                "$ref": "#/properties/target/properties/app"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "artifactId",
+          "kind",
+          "displayName"
+        ],
+        "additionalProperties": false
+      },
+      "verified": {
+        "type": "boolean"
+      }
+    },
+    "required": [
+      "id",
+      "target",
+      "revision",
+      "createdAt",
+      "sha256",
+      "artifact",
+      "verified"
+    ],
+    "additionalProperties": false,
+    "$schema": "https://json-schema.org/draft/2020-12/schema"
+  },
+  "TargetRef": {
+    "type": "object",
+    "properties": {
+      "app": {
+        "type": "string",
+        "enum": [
+          "photoshop",
+          "illustrator",
+          "after-effects",
+          "premiere-pro"
+        ]
+      },
+      "instanceId": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 256
+      },
+      "projectId": {
+        "$ref": "#/properties/instanceId"
+      },
+      "documentId": {
+        "$ref": "#/properties/instanceId"
+      },
+      "entityId": {
+        "$ref": "#/properties/instanceId"
+      }
+    },
+    "required": [
+      "app"
+    ],
+    "additionalProperties": false,
+    "$schema": "https://json-schema.org/draft/2020-12/schema"
+  },
+  "VisualVerifyData": {
+    "type": "object",
+    "properties": {
+      "match": {
+        "type": "boolean"
+      },
+      "diffScore": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 1
+      },
+      "currentImageBase64": {
+        "type": "string",
+        "minLength": 1
+      },
+      "details": {
+        "type": "object",
+        "additionalProperties": {}
+      }
+    },
+    "required": [
+      "match",
+      "diffScore",
+      "details"
+    ],
+    "additionalProperties": false,
+    "$schema": "https://json-schema.org/draft/2020-12/schema"
+  },
+  "VisualVerifyInput": {
+    "type": "object",
+    "properties": {
+      "target": {
+        "type": "object",
+        "properties": {
+          "app": {
+            "type": "string",
+            "enum": [
+              "photoshop",
+              "illustrator",
+              "after-effects",
+              "premiere-pro"
+            ]
+          },
+          "instanceId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "projectId": {
+            "$ref": "#/properties/target/properties/instanceId"
+          },
+          "documentId": {
+            "$ref": "#/properties/target/properties/instanceId"
+          },
+          "entityId": {
+            "$ref": "#/properties/target/properties/instanceId"
+          }
+        },
+        "required": [
+          "app"
+        ],
+        "additionalProperties": false
+      },
+      "baselineImageBase64": {
+        "type": "string",
+        "minLength": 1
+      },
+      "tolerance": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0.05
+      },
+      "time": {
+        "type": "object",
+        "properties": {
+          "ticks": {
+            "type": "string",
+            "pattern": "^-?\\d+$",
+            "maxLength": 32
+          },
+          "timebase": {
+            "type": "string",
+            "pattern": "^[1-9]\\d*$",
+            "maxLength": 12
+          }
+        },
+        "required": [
+          "ticks",
+          "timebase"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "required": [
+      "target",
+      "baselineImageBase64"
+    ],
+    "additionalProperties": false,
+    "$schema": "https://json-schema.org/draft/2020-12/schema"
+  },
+  "VisualVerifyOutput": {
+    "anyOf": [
+      {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "const": true
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "match": {
+                "type": "boolean"
+              },
+              "diffScore": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "currentImageBase64": {
+                "type": "string",
+                "minLength": 1
+              },
+              "details": {
+                "type": "object",
+                "additionalProperties": {}
+              }
+            },
+            "required": [
+              "match",
+              "diffScore",
+              "details"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "ok",
+          "data"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "const": false
+          },
+          "error": {}
+        },
+        "required": [
+          "ok"
+        ],
+        "additionalProperties": false
+      }
+    ],
+    "$schema": "https://json-schema.org/draft/2020-12/schema"
+  }
+}

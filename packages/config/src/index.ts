@@ -1,0 +1,5 @@
+import { z } from "zod";
+import { Risk } from "@adobe-mcp/tool-catalog";
+export const PolicyConfig = z.object({ apps: z.array(z.enum(["photoshop", "illustrator", "after-effects", "premiere-pro"])), roots: z.array(z.string()), formats: z.array(z.string()), limits: z.object({ maxPendingRequests: z.number().int().positive(), maxFrameBytes: z.number().int().positive(), maxEntities: z.number().int().positive(), maxFiles: z.number().int().positive(), maxBytes: z.number().int().positive(), maxMinutes: z.number().positive() }).strict(), risk: z.object({ interactiveFrom: Risk, denyUnattendedAt: Risk }).strict(), interaction: z.object({ externalNetwork: z.boolean(), arbitraryExecution: z.boolean(), loopbackOnly: z.boolean() }).strict(), retention: z.object({ snapshotsDays: z.number().positive(), logsDays: z.number().positive() }).strict(), telemetry: z.enum(["opt-in", "off"]) }).strict();
+export type PolicyConfig = z.infer<typeof PolicyConfig>;
+export function parsePolicy(input: unknown): PolicyConfig { return PolicyConfig.parse(input); }

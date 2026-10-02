@@ -1,0 +1,26 @@
+{
+  "name": "adobe-mcp",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@9.15.1",
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev --parallel",
+    "test": "turbo run test",
+    "test:contract": "turbo run test:contract",
+    "test:e2e": "turbo run test:e2e",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "schemas:generate": "pnpm --filter @adobe-mcp/schemas schemas:generate",
+    "schemas:check": "pnpm --filter @adobe-mcp/schemas schemas:check",
+    "package": "turbo run package",
+    "clean": "turbo run clean"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "turbo": "^2.3.3",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "name": "@adobe-mcp/aftereffects-panel",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node -e \"require('fs').accessSync('src/AfterEffectsBridge.jsx')\"",
+    "test": "node -e \"process.exit(0)\""
+  }
+}

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ExtensionManifest Version="11.0" ExtensionBundleId="com.adobe-mcp.premiere.cep" ExtensionBundleVersion="0.1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <ExtensionList><Extension Id="com.adobe-mcp.premiere.cep.panel" Version="0.1.0" /></ExtensionList>
+  <ExecutionEnvironment><HostList><Host Name="PPRO" Version="24.0" /></HostList><LocaleList><Locale Code="All" /></LocaleList><RequiredRuntimeList><Runtime Name="CSXS" Version="11.0" /></RequiredRuntimeList></ExecutionEnvironment>
+  <DispatchInfoList><Extension Id="com.adobe-mcp.premiere.cep.panel"><DispatchInfo><Resources><MainPath>dist/index.html</MainPath><ScriptPath>dist/index.js</ScriptPath></Resources><Lifecycle><AutoVisible>true</AutoVisible></Lifecycle><UI><Type>Panel</Type><Menu>adobe-mcp Premiere Bridge</Menu><Geometry><Size><Width>420</Width><Height>640</Height></Size><MinSize><Width>320</Width><Height>240</Height></Geometry></UI></DispatchInfo></Extension></DispatchInfoList>
+  <ExtraMetadata><Data key="adobe-mcp.loopback">127.0.0.1</Data><Data key="adobe-mcp.filesystem">user-grants-only</Data></ExtraMetadata>
+</ExtensionManifest>

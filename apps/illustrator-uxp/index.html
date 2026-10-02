@@ -1,0 +1,33 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Adobe MCP</title>
+    <style>
+      :root { color-scheme: dark; font-family: system-ui, sans-serif; }
+      body { margin: 0; padding: 12px; background: #252525; color: #f2f2f2; }
+      h1 { font-size: 16px; margin: 0 0 12px; }
+      label { display: block; margin: 8px 0 4px; font-size: 11px; color: #c8c8c8; }
+      input, button { box-sizing: border-box; width: 100%; min-height: 28px; border: 1px solid #555; border-radius: 3px; background: #333; color: #fff; padding: 4px 7px; }
+      button { cursor: pointer; margin-top: 8px; background: #1473e6; border-color: #1473e6; }
+      button.secondary { background: #3b3b3b; border-color: #666; }
+      .row { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+      #status { margin: 10px 0; font-size: 11px; color: #b7e3b7; min-height: 14px; }
+      #output { white-space: pre-wrap; word-break: break-word; background: #1b1b1b; border: 1px solid #444; border-radius: 3px; padding: 7px; max-height: 300px; overflow: auto; font: 10px/1.4 monospace; }
+    </style>
+  </head>
+  <body>
+    <h1>Adobe MCP · Illustrator</h1>
+    <label for="endpoint">Daemon WebSocket</label>
+    <input id="endpoint" value="ws://127.0.0.1:0" autocomplete="off">
+    <label for="token">Token local (base64url)</label>
+    <input id="token" type="password" autocomplete="off">
+    <div id="status">Desconectado</div>
+    <div class="row">
+      <button id="connect">Conectar</button>
+      <button id="inspect" class="secondary">Inspeccionar</button>
+    </div>
+    <pre id="output">Esperando conexión…</pre>
+    <script src="index.js"></script>
+  </body>
+</html>
