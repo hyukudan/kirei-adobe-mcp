@@ -44,8 +44,18 @@ export const AfterEffectsRenderAdvanced = z.object({ projectPath: z.string().min
 export const IllustratorImageTrace = z.object({ target: target.refine((v) => v.app === "illustrator"), imageId: id, preset: z.enum(["logo", "silhouette", "sketch", "highFidelityPhoto"]), threshold: z.number().min(0).max(255).optional(), colors: z.number().int().min(2).max(256).optional(), options: mutationOptions }).strict();
 export const IllustratorSwatchesCreate = z.object({ target: target.refine((v) => v.app === "illustrator"), colors: z.array(z.object({ name: id, color: color, global: z.boolean().default(true) }).strict()).min(1).max(1000), harmony: z.enum(["none", "complementary", "analogous", "triadic", "split-complementary", "tetradic"]).default("none"), options: mutationOptions }).strict();
 export const IllustratorVariableTypography = z.object({ target: target.refine((v) => v.app === "illustrator"), textItemId: id, fontFamily: id.optional(), axes: z.object({ weight: z.number().min(1).max(1000).optional(), width: z.number().min(1).max(1000).optional(), slant: z.number().min(-90).max(90).optional() }).strict(), options: mutationOptions }).strict();
+export const PhotoshopTransformApply = z.object({ target: target.refine((v) => v.app === "photoshop"), layerId: id, mode: z.enum(["free", "perspective", "warp", "skew", "rotate"]), matrix: z.array(z.number().finite()).min(4).max(16).optional(), warpGrid: z.object({ columns: z.number().int().min(1).max(32), rows: z.number().int().min(1).max(32), points: z.array(z.tuple([z.number().finite(), z.number().finite()])).max(1024) }).strict().optional(), interpolation: z.enum(["bicubic", "nearestNeighbor", "bilinear", "bicubicSmoother", "bicubicSharper"]).default("bicubic"), options: mutationOptions }).strict();
+export const PhotoshopGenerativeFill = z.object({ target: target.refine((v) => v.app === "photoshop"), layerId: id.optional(), prompt: z.string().min(1).max(2000), selectionMaskArtifactUri: z.string().regex(/^artifact:\/\/sha256-[a-f0-9]{64}$/).optional(), variationsCount: z.number().int().min(1).max(4).default(3), options: mutationOptions }).strict();
+
+export const PremiereProxiesManage = z.object({ target: target.refine((v) => v.app === "premiere-pro"), clipIds: z.array(id).min(1).max(500), action: z.enum(["attach", "detach", "toggle", "status"]), proxyPaths: z.array(z.string().min(1).max(4096)).max(500).optional(), enableProxies: z.boolean().optional(), options: mutationOptions }).strict();
+export const PremiereTranscriptSync = z.object({ target: target.refine((v) => v.app === "premiere-pro"), sequenceId: id, language: z.string().max(32).default("auto"), createCaptionsTrack: z.boolean().default(true), maxCharactersPerLine: z.number().int().min(10).max(100).default(37), options: mutationOptions }).strict();
+
+export const AfterEffectsTrackingExtract = z.object({ target: target.refine((v) => v.app === "after-effects"), compId: id, layerId: id, trackerType: z.enum(["3dCameraTracker", "pointTracker", "mochaAE", "stabilizer"]), exportFormat: z.enum(["json", "nullRig", "cameraRig", "cornerPin"]), options: mutationOptions }).strict();
+
+export const IllustratorSymbolsManage = z.object({ target: target.refine((v) => v.app === "illustrator"), action: z.enum(["create", "place", "redefine", "applyGraphicStyle"]), name: id, itemIds: z.array(id).max(1000).optional(), position: z.tuple([z.number().finite(), z.number().finite()]).optional(), styleName: id.optional(), options: mutationOptions }).strict();
 
 export type PlanHandle = z.infer<typeof PlanHandle>;
 export type ToolCatalogEntry = z.infer<typeof ToolCatalogEntry>;
 export type ToolDiscoveryInput = z.infer<typeof ToolDiscoveryInput>;
 export type ToolDescribeResult = z.infer<typeof ToolDescribeResult>;
+
