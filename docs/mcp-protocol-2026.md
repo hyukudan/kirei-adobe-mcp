@@ -72,7 +72,7 @@ Resolve an operation against a revision-bound target, validate its specific sche
 
 Execute the stored plan only if the handle, expected hash, target revision, idempotency key, and approval proof still match. It returns a completed receipt, an accepted job/task, or an input-required envelope. Arbitrary `operationName + args` is never dispatched without registry lookup and schema revalidation.
 
-The current `0.1.0` gateway already has plural `adobe.operations.plan` and `adobe.operations.execute`, but not yet the complete handle-based v2 contract. `adobe.tools.discover` and `adobe.tools.describe` are target tools.
+The gateway implements the handle-based contract with immutable `PlanHandle` records containing command digests, snapshot references, previews, expected revisions, expiry and approval-bound hashes. `adobe.tools.discover` and `adobe.tools.describe` expose the internal registry without expanding the public tool list.
 
 ## Prompts
 
@@ -127,7 +127,7 @@ Target prompt retrieval:
 }
 ```
 
-Prompts are **roadmap** in `0.1.0`. They will be semantically versioned and pin exact operation versions when they produce a workflow plan.
+Prompts are available through `prompts/list` and `prompts/get` for the four shipped recipes. They remain guidance-only: prompt expansion never bypasses discovery, plan compilation, approval or host capability checks.
 
 ## Dynamic MCP resources
 

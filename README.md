@@ -118,7 +118,7 @@ Creative applications have hundreds of useful operations. Publishing each one as
 3. `adobe.operations.plan` validates targets and revisions, computes scope and risk, and produces an immutable plan hash.
 4. `adobe.operations.execute` executes the approved plan idempotently and returns a receipt.
 
-This progressive-disclosure pattern is designed to reduce initial catalog tokens by at least 80% while preserving strict validation. The current `0.1.0` gateway already implements `adobe.operations.plan` and `adobe.operations.execute`; `discover` and `describe`, structured output, prompts, and the native MCP 2026 endpoint are the next protocol layer. Until that migration lands, `tools/list` exposes the versioned domain catalog directly. Details and migration semantics are in [MCP protocol 2026](docs/mcp-protocol-2026.md).
+This progressive-disclosure pattern is designed to reduce initial catalog tokens by at least 80% while preserving strict validation. The gateway now exposes the stable front-door list, structured output, prompts, dynamic resources and the MCP 2026 protocol identifier; the full operation surface remains available through discovery and description.
 
 ## What you can build
 
@@ -129,7 +129,7 @@ This progressive-disclosure pattern is designed to reduce initial catalog tokens
 | After Effects | Project/comp/layer edits, keyframes, preset resources, render queue | Shape operators, text animators, expression controls, chunked `aerender` jobs |
 | Illustrator | Paths, compound paths, boolean operations, type, multi-artboard export | Image Trace, global swatches, variable OpenType, brand-kit vectorization |
 
-Advanced rows are capability-gated or roadmap where the host adapter is not yet certified. The individual guides give exact status and fallback behavior.
+Advanced rows are capability-gated and carry an explicit verification level in discovery. Host certification remains authoritative at runtime; the individual guides give exact fallback behavior.
 
 ## Safety model
 

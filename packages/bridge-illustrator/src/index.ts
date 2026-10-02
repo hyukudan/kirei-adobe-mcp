@@ -21,6 +21,7 @@ import {
 } from "@adobe-mcp/bridge-core";
 import type { ArtifactRef, Job, OperationReceipt, PreviewCaptureData, Snapshot, TargetRef } from "@adobe-mcp/schemas";
 import { AiDocumentState as AiDocumentStateSchema, IllustratorArtboardExport, IllustratorArtboardExportResult, IllustratorEditCommand, AfterEffectsPresetApply, PremiereEditPlan, OperationReceipt as OperationReceiptSchema, PreviewCaptureData as PreviewCaptureDataSchema, Snapshot as SnapshotSchema } from "@adobe-mcp/schemas";
+export { buildGlobalSwatches, buildImageTrace, buildVariableTypography } from "./advanced.js";
 
 export const ILLUSTRATOR_CAPABILITIES = [
   "state.read@1", "state.write@1", "artboards.read@1", "layers.read@1", "page-items.read@1",

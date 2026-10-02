@@ -7,7 +7,7 @@
     var socket = null, webSocket = null, readBuffer = "", sequence = 1;
     var sessionId = null, clientNonce = null, serverNonce = null, authenticated = false, nonceCounter = 0, usedNonces = {}, currentRevision = "ae-init";
     var config = { host: "127.0.0.1", port: 0, token: "", appVersion: VERSION, instanceId: null };
-    var CAPABILITIES = ["state.read@1", "state.write@1", "project.inspect@1", "compositions.inspect@1", "layers.inspect@1", "properties.inspect@1", "keyframes.read@1", "keyframes.write@1", "render-queue.read@1", "render-queue.write@1", "snapshot.create@1", "preview.capture@1", "export.file@1", "preset.apply@1"];
+    var CAPABILITIES = ["state.read@1", "state.write@1", "project.inspect@1", "compositions.inspect@1", "layers.inspect@1", "properties.inspect@1", "keyframes.read@1", "keyframes.write@1", "render-queue.read@1", "render-queue.write@1", "snapshot.create@1", "preview.capture@1", "export.file@1", "preset.apply@1", "aftereffects.shape@1", "aftereffects.text@1", "aftereffects.expression-control@1"];
 
     function configure(options) { if (!options) return; for (var key in options) if (options.hasOwnProperty(key)) config[key] = options[key]; }
     function send(value) { var payload = JSON.stringify(value), line = payload + "\n"; if (line.length > MAX_FRAME_BYTES) throw new Error("RATE_LIMITED: frame exceeds configured limit"); if (socket && socket.connected) socket.write(line); else if (webSocket) webSocket.send(payload); }
@@ -87,6 +87,17 @@
     function interpolationType(name) { if (name === "hold") return KeyframeInterpolationType.HOLD; if (name === "bezier") return KeyframeInterpolationType.BEZIER; return KeyframeInterpolationType.LINEAR; }
     function applyCommand(comp, command, tempIds) {
         if (!object(command) || typeof command.op !== "string") throw new Error("INVALID_ARGUMENT: command");
+        if (command.op === "advanced") {
+            var payload = command.payload || {}, tool = String(command.tool || ""), advancedLayer = payload.layerId ? findLayer(comp, String(payload.layerId)) : null;
+            if (tool === "adobe.aftereffects.shape.create") {
+                var shapeLayer = comp.layers.addShape(payload.groupName || "MCP Shape"), root = shapeLayer.property("ADBE Root Vectors Group"), group = root.addProperty("ADBE Vector Group"); group.name = String(payload.groupName || "Shapes");
+                var shapes = payload.shapes || []; for (var s = 0; s < shapes.length; s++) { var shape = shapes[s]; if (shape.type === "rectangle") { var rect = group.property("ADBE Vectors Group").addProperty("ADBE Vector Shape - Rect"); if (shape.size) rect.property("ADBE Vector Rect Size").setValue(shape.size); } else if (shape.type === "ellipse") { var ellipse = group.property("ADBE Vectors Group").addProperty("ADBE Vector Shape - Ellipse"); if (shape.size) ellipse.property("ADBE Vector Ellipse Size").setValue(shape.size); } }
+                var modifiers = payload.modifiers || {}; if (modifiers.trimPaths) group.property("ADBE Vectors Group").addProperty("ADBE Vector Filter - Trim"); if (modifiers.repeater) group.property("ADBE Vectors Group").addProperty("ADBE Vector Filter - Repeater"); if (modifiers.puckerAndBloat) group.property("ADBE Vectors Group").addProperty("ADBE Vector Filter - PB"); return;
+            }
+            if (tool === "adobe.aftereffects.text.animate") { if (!advancedLayer) throw new Error("NOT_FOUND: text layer"); var textProps = advancedLayer.property("ADBE Text Properties"), animators = textProps.property("ADBE Text Animators"), animator = animators.addProperty("ADBE Text Animator"); animator.name = "MCP Character Animator"; var selector = animator.property("ADBE Text Selectors").property(1); if (payload.rangeSelector) { selector.property("ADBE Text Percent Start").setValue(payload.rangeSelector.start); selector.property("ADBE Text Percent End").setValue(payload.rangeSelector.end); selector.property("ADBE Text Percent Offset").setValue(payload.rangeSelector.offset); } return; }
+            if (tool === "adobe.aftereffects.expressionControl.add") { if (!advancedLayer) throw new Error("NOT_FOUND: expression-control layer"); var names = { slider: "ADBE Slider Control", color: "ADBE Color Control", point: "ADBE Point Control", angle: "ADBE Angle Control" }, effect = advancedLayer.property("ADBE Effect Parade").addProperty(names[payload.control]); effect.name = String(payload.name); if (payload.expression) effect.property(1).expression = String(payload.expression); if (payload.value !== undefined) effect.property(1).setValue(payload.value); return; }
+            throw new Error("UNSUPPORTED_CAPABILITY: After Effects advanced command");
+        }
         if (command.op === "create-layer") {
             requireString(command.name, "name"); var layer;
             if (command.kind === "solid") layer = comp.layers.addSolid([0, 0, 0], command.name, comp.width, comp.height, 1);

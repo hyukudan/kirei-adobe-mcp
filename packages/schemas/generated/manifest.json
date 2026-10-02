@@ -394,6 +394,136 @@
     ],
     "$schema": "https://json-schema.org/draft/2020-12/schema"
   },
+  "AfterEffectsExpressionControl": {
+    "type": "object",
+    "properties": {
+      "target": {
+        "type": "object",
+        "properties": {
+          "app": {
+            "type": "string",
+            "enum": [
+              "photoshop",
+              "illustrator",
+              "after-effects",
+              "premiere-pro"
+            ]
+          },
+          "instanceId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "projectId": {
+            "$ref": "#/properties/target/properties/instanceId"
+          },
+          "documentId": {
+            "$ref": "#/properties/target/properties/instanceId"
+          },
+          "entityId": {
+            "$ref": "#/properties/target/properties/instanceId"
+          }
+        },
+        "required": [
+          "app"
+        ],
+        "additionalProperties": false
+      },
+      "layerId": {
+        "$ref": "#/properties/target/properties/instanceId"
+      },
+      "control": {
+        "type": "string",
+        "enum": [
+          "slider",
+          "color",
+          "point",
+          "angle"
+        ]
+      },
+      "name": {
+        "$ref": "#/properties/target/properties/instanceId"
+      },
+      "value": {
+        "anyOf": [
+          {
+            "type": "number"
+          },
+          {
+            "type": "array",
+            "items": {
+              "type": "number"
+            },
+            "minItems": 2,
+            "maxItems": 4
+          }
+        ]
+      },
+      "expression": {
+        "type": "string",
+        "maxLength": 10000
+      },
+      "options": {
+        "type": "object",
+        "properties": {
+          "operationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "expectedRevision": {
+            "$ref": "#/properties/target/properties/instanceId"
+          },
+          "dryRun": {
+            "type": "boolean",
+            "default": false
+          },
+          "atomic": {
+            "type": "boolean",
+            "default": true
+          },
+          "conflictPolicy": {
+            "type": "string",
+            "enum": [
+              "fail",
+              "rebase-safe"
+            ],
+            "default": "fail"
+          },
+          "verification": {
+            "type": "string",
+            "enum": [
+              "none",
+              "state",
+              "render-proof"
+            ],
+            "default": "state"
+          },
+          "approvalToken": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          },
+          "explicitConfirmation": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "operationId"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "required": [
+      "target",
+      "layerId",
+      "control",
+      "name",
+      "value",
+      "options"
+    ],
+    "additionalProperties": false,
+    "$schema": "https://json-schema.org/draft/2020-12/schema"
+  },
   "AfterEffectsPreset": {
     "type": "object",
     "properties": {
@@ -589,6 +719,107 @@
     "additionalProperties": false,
     "$schema": "https://json-schema.org/draft/2020-12/schema"
   },
+  "AfterEffectsRenderAdvanced": {
+    "type": "object",
+    "properties": {
+      "projectPath": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 4096
+      },
+      "comp": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 256
+      },
+      "outputPath": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 4096
+      },
+      "startFrame": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "endFrame": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "segmentSize": {
+        "type": "integer",
+        "exclusiveMinimum": true,
+        "minimum": 0,
+        "maximum": 100000
+      },
+      "renderSettingsTemplate": {
+        "type": "string",
+        "maxLength": 256
+      },
+      "outputModuleTemplate": {
+        "type": "string",
+        "maxLength": 256
+      },
+      "options": {
+        "type": "object",
+        "properties": {
+          "operationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "expectedRevision": {
+            "$ref": "#/properties/comp"
+          },
+          "dryRun": {
+            "type": "boolean",
+            "default": false
+          },
+          "atomic": {
+            "type": "boolean",
+            "default": true
+          },
+          "conflictPolicy": {
+            "type": "string",
+            "enum": [
+              "fail",
+              "rebase-safe"
+            ],
+            "default": "fail"
+          },
+          "verification": {
+            "type": "string",
+            "enum": [
+              "none",
+              "state",
+              "render-proof"
+            ],
+            "default": "state"
+          },
+          "approvalToken": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          },
+          "explicitConfirmation": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "operationId"
+        ],
+        "additionalProperties": false
+      },
+      "planHandle": {},
+      "approval": {},
+      "plan": {}
+    },
+    "required": [
+      "projectPath",
+      "outputPath",
+      "options"
+    ],
+    "additionalProperties": false,
+    "$schema": "https://json-schema.org/draft/2020-12/schema"
+  },
   "AfterEffectsRenderPlan": {
     "type": "object",
     "properties": {
@@ -639,6 +870,418 @@
       "projectPath",
       "outputPath",
       "segments"
+    ],
+    "additionalProperties": false,
+    "$schema": "https://json-schema.org/draft/2020-12/schema"
+  },
+  "AfterEffectsShapeCreate": {
+    "type": "object",
+    "properties": {
+      "target": {
+        "type": "object",
+        "properties": {
+          "app": {
+            "type": "string",
+            "enum": [
+              "photoshop",
+              "illustrator",
+              "after-effects",
+              "premiere-pro"
+            ]
+          },
+          "instanceId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "projectId": {
+            "$ref": "#/properties/target/properties/instanceId"
+          },
+          "documentId": {
+            "$ref": "#/properties/target/properties/instanceId"
+          },
+          "entityId": {
+            "$ref": "#/properties/target/properties/instanceId"
+          }
+        },
+        "required": [
+          "app"
+        ],
+        "additionalProperties": false
+      },
+      "compId": {
+        "$ref": "#/properties/target/properties/instanceId"
+      },
+      "groupName": {
+        "$ref": "#/properties/target/properties/instanceId"
+      },
+      "shapes": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "rectangle",
+                "ellipse",
+                "path",
+                "polystar"
+              ]
+            },
+            "vertices": {
+              "type": "array",
+              "items": {
+                "type": "array",
+                "minItems": 2,
+                "maxItems": 2,
+                "items": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ]
+              },
+              "maxItems": 10000
+            },
+            "size": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": [
+                {
+                  "type": "number",
+                  "exclusiveMinimum": true,
+                  "minimum": 0
+                },
+                {
+                  "type": "number",
+                  "exclusiveMinimum": true,
+                  "minimum": 0
+                }
+              ]
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "additionalProperties": false
+        },
+        "minItems": 1,
+        "maxItems": 500
+      },
+      "modifiers": {
+        "type": "object",
+        "properties": {
+          "trimPaths": {
+            "type": "object",
+            "properties": {
+              "start": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 100
+              },
+              "end": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 100
+              },
+              "offset": {
+                "type": "number",
+                "default": 0
+              }
+            },
+            "required": [
+              "start",
+              "end"
+            ],
+            "additionalProperties": false
+          },
+          "repeater": {
+            "type": "object",
+            "properties": {
+              "copies": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 1000
+              },
+              "offset": {
+                "type": "array",
+                "minItems": 2,
+                "maxItems": 2,
+                "items": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ]
+              },
+              "scale": {
+                "type": "number",
+                "exclusiveMinimum": true,
+                "minimum": 0,
+                "maximum": 100,
+                "default": 1
+              }
+            },
+            "required": [
+              "copies",
+              "offset"
+            ],
+            "additionalProperties": false
+          },
+          "puckerAndBloat": {
+            "type": "object",
+            "properties": {
+              "amount": {
+                "type": "number",
+                "minimum": -100,
+                "maximum": 100
+              }
+            },
+            "required": [
+              "amount"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false,
+        "default": {}
+      },
+      "options": {
+        "type": "object",
+        "properties": {
+          "operationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "expectedRevision": {
+            "$ref": "#/properties/target/properties/instanceId"
+          },
+          "dryRun": {
+            "type": "boolean",
+            "default": false
+          },
+          "atomic": {
+            "type": "boolean",
+            "default": true
+          },
+          "conflictPolicy": {
+            "type": "string",
+            "enum": [
+              "fail",
+              "rebase-safe"
+            ],
+            "default": "fail"
+          },
+          "verification": {
+            "type": "string",
+            "enum": [
+              "none",
+              "state",
+              "render-proof"
+            ],
+            "default": "state"
+          },
+          "approvalToken": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          },
+          "explicitConfirmation": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "operationId"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "required": [
+      "target",
+      "compId",
+      "groupName",
+      "shapes",
+      "options"
+    ],
+    "additionalProperties": false,
+    "$schema": "https://json-schema.org/draft/2020-12/schema"
+  },
+  "AfterEffectsTextAnimate": {
+    "type": "object",
+    "properties": {
+      "target": {
+        "type": "object",
+        "properties": {
+          "app": {
+            "type": "string",
+            "enum": [
+              "photoshop",
+              "illustrator",
+              "after-effects",
+              "premiere-pro"
+            ]
+          },
+          "instanceId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "projectId": {
+            "$ref": "#/properties/target/properties/instanceId"
+          },
+          "documentId": {
+            "$ref": "#/properties/target/properties/instanceId"
+          },
+          "entityId": {
+            "$ref": "#/properties/target/properties/instanceId"
+          }
+        },
+        "required": [
+          "app"
+        ],
+        "additionalProperties": false
+      },
+      "layerId": {
+        "$ref": "#/properties/target/properties/instanceId"
+      },
+      "text": {
+        "type": "string",
+        "maxLength": 100000
+      },
+      "properties": {
+        "type": "object",
+        "properties": {
+          "position": {
+            "type": "boolean"
+          },
+          "scale": {
+            "type": "boolean"
+          },
+          "rotation": {
+            "type": "boolean"
+          },
+          "opacity": {
+            "type": "boolean"
+          },
+          "tracking": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "rangeSelector": {
+        "type": "object",
+        "properties": {
+          "start": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100
+          },
+          "end": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100
+          },
+          "offset": {
+            "type": "number",
+            "minimum": -100,
+            "maximum": 100
+          },
+          "smoothness": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100,
+            "default": 100
+          }
+        },
+        "required": [
+          "start",
+          "end",
+          "offset"
+        ],
+        "additionalProperties": false
+      },
+      "wiggle": {
+        "type": "object",
+        "properties": {
+          "frequency": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100
+          },
+          "amplitude": {
+            "type": "number",
+            "maximum": 10000
+          }
+        },
+        "required": [
+          "frequency",
+          "amplitude"
+        ],
+        "additionalProperties": false
+      },
+      "options": {
+        "type": "object",
+        "properties": {
+          "operationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "expectedRevision": {
+            "$ref": "#/properties/target/properties/instanceId"
+          },
+          "dryRun": {
+            "type": "boolean",
+            "default": false
+          },
+          "atomic": {
+            "type": "boolean",
+            "default": true
+          },
+          "conflictPolicy": {
+            "type": "string",
+            "enum": [
+              "fail",
+              "rebase-safe"
+            ],
+            "default": "fail"
+          },
+          "verification": {
+            "type": "string",
+            "enum": [
+              "none",
+              "state",
+              "render-proof"
+            ],
+            "default": "state"
+          },
+          "approvalToken": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          },
+          "explicitConfirmation": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "operationId"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "required": [
+      "target",
+      "layerId",
+      "properties",
+      "rangeSelector",
+      "options"
     ],
     "additionalProperties": false,
     "$schema": "https://json-schema.org/draft/2020-12/schema"
@@ -1769,6 +2412,284 @@
     ],
     "$schema": "https://json-schema.org/draft/2020-12/schema"
   },
+  "IllustratorImageTrace": {
+    "type": "object",
+    "properties": {
+      "target": {
+        "type": "object",
+        "properties": {
+          "app": {
+            "type": "string",
+            "enum": [
+              "photoshop",
+              "illustrator",
+              "after-effects",
+              "premiere-pro"
+            ]
+          },
+          "instanceId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "projectId": {
+            "$ref": "#/properties/target/properties/instanceId"
+          },
+          "documentId": {
+            "$ref": "#/properties/target/properties/instanceId"
+          },
+          "entityId": {
+            "$ref": "#/properties/target/properties/instanceId"
+          }
+        },
+        "required": [
+          "app"
+        ],
+        "additionalProperties": false
+      },
+      "imageId": {
+        "$ref": "#/properties/target/properties/instanceId"
+      },
+      "preset": {
+        "type": "string",
+        "enum": [
+          "logo",
+          "silhouette",
+          "sketch",
+          "highFidelityPhoto"
+        ]
+      },
+      "threshold": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 255
+      },
+      "colors": {
+        "type": "integer",
+        "minimum": 2,
+        "maximum": 256
+      },
+      "options": {
+        "type": "object",
+        "properties": {
+          "operationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "expectedRevision": {
+            "$ref": "#/properties/target/properties/instanceId"
+          },
+          "dryRun": {
+            "type": "boolean",
+            "default": false
+          },
+          "atomic": {
+            "type": "boolean",
+            "default": true
+          },
+          "conflictPolicy": {
+            "type": "string",
+            "enum": [
+              "fail",
+              "rebase-safe"
+            ],
+            "default": "fail"
+          },
+          "verification": {
+            "type": "string",
+            "enum": [
+              "none",
+              "state",
+              "render-proof"
+            ],
+            "default": "state"
+          },
+          "approvalToken": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          },
+          "explicitConfirmation": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "operationId"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "required": [
+      "target",
+      "imageId",
+      "preset",
+      "options"
+    ],
+    "additionalProperties": false,
+    "$schema": "https://json-schema.org/draft/2020-12/schema"
+  },
+  "IllustratorSwatchesCreate": {
+    "type": "object",
+    "properties": {
+      "target": {
+        "type": "object",
+        "properties": {
+          "app": {
+            "type": "string",
+            "enum": [
+              "photoshop",
+              "illustrator",
+              "after-effects",
+              "premiere-pro"
+            ]
+          },
+          "instanceId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "projectId": {
+            "$ref": "#/properties/target/properties/instanceId"
+          },
+          "documentId": {
+            "$ref": "#/properties/target/properties/instanceId"
+          },
+          "entityId": {
+            "$ref": "#/properties/target/properties/instanceId"
+          }
+        },
+        "required": [
+          "app"
+        ],
+        "additionalProperties": false
+      },
+      "colors": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "$ref": "#/properties/target/properties/instanceId"
+            },
+            "color": {
+              "type": "object",
+              "properties": {
+                "space": {
+                  "type": "string",
+                  "enum": [
+                    "rgb",
+                    "cmyk",
+                    "lab",
+                    "gray"
+                  ]
+                },
+                "components": {
+                  "type": "array",
+                  "items": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                  "minItems": 1,
+                  "maxItems": 4
+                },
+                "alpha": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1,
+                  "default": 1
+                }
+              },
+              "required": [
+                "space",
+                "components"
+              ],
+              "additionalProperties": false
+            },
+            "global": {
+              "type": "boolean",
+              "default": true
+            }
+          },
+          "required": [
+            "name",
+            "color"
+          ],
+          "additionalProperties": false
+        },
+        "minItems": 1,
+        "maxItems": 1000
+      },
+      "harmony": {
+        "type": "string",
+        "enum": [
+          "none",
+          "complementary",
+          "analogous",
+          "triadic",
+          "split-complementary",
+          "tetradic"
+        ],
+        "default": "none"
+      },
+      "options": {
+        "type": "object",
+        "properties": {
+          "operationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "expectedRevision": {
+            "$ref": "#/properties/target/properties/instanceId"
+          },
+          "dryRun": {
+            "type": "boolean",
+            "default": false
+          },
+          "atomic": {
+            "type": "boolean",
+            "default": true
+          },
+          "conflictPolicy": {
+            "type": "string",
+            "enum": [
+              "fail",
+              "rebase-safe"
+            ],
+            "default": "fail"
+          },
+          "verification": {
+            "type": "string",
+            "enum": [
+              "none",
+              "state",
+              "render-proof"
+            ],
+            "default": "state"
+          },
+          "approvalToken": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          },
+          "explicitConfirmation": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "operationId"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "required": [
+      "target",
+      "colors",
+      "options"
+    ],
+    "additionalProperties": false,
+    "$schema": "https://json-schema.org/draft/2020-12/schema"
+  },
   "IllustratorTextSpec": {
     "type": "object",
     "properties": {
@@ -1813,6 +2734,127 @@
     },
     "required": [
       "itemId"
+    ],
+    "additionalProperties": false,
+    "$schema": "https://json-schema.org/draft/2020-12/schema"
+  },
+  "IllustratorVariableTypography": {
+    "type": "object",
+    "properties": {
+      "target": {
+        "type": "object",
+        "properties": {
+          "app": {
+            "type": "string",
+            "enum": [
+              "photoshop",
+              "illustrator",
+              "after-effects",
+              "premiere-pro"
+            ]
+          },
+          "instanceId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "projectId": {
+            "$ref": "#/properties/target/properties/instanceId"
+          },
+          "documentId": {
+            "$ref": "#/properties/target/properties/instanceId"
+          },
+          "entityId": {
+            "$ref": "#/properties/target/properties/instanceId"
+          }
+        },
+        "required": [
+          "app"
+        ],
+        "additionalProperties": false
+      },
+      "textItemId": {
+        "$ref": "#/properties/target/properties/instanceId"
+      },
+      "fontFamily": {
+        "$ref": "#/properties/target/properties/instanceId"
+      },
+      "axes": {
+        "type": "object",
+        "properties": {
+          "weight": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 1000
+          },
+          "width": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 1000
+          },
+          "slant": {
+            "type": "number",
+            "minimum": -90,
+            "maximum": 90
+          }
+        },
+        "additionalProperties": false
+      },
+      "options": {
+        "type": "object",
+        "properties": {
+          "operationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "expectedRevision": {
+            "$ref": "#/properties/target/properties/instanceId"
+          },
+          "dryRun": {
+            "type": "boolean",
+            "default": false
+          },
+          "atomic": {
+            "type": "boolean",
+            "default": true
+          },
+          "conflictPolicy": {
+            "type": "string",
+            "enum": [
+              "fail",
+              "rebase-safe"
+            ],
+            "default": "fail"
+          },
+          "verification": {
+            "type": "string",
+            "enum": [
+              "none",
+              "state",
+              "render-proof"
+            ],
+            "default": "state"
+          },
+          "approvalToken": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          },
+          "explicitConfirmation": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "operationId"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "required": [
+      "target",
+      "textItemId",
+      "axes",
+      "options"
     ],
     "additionalProperties": false,
     "$schema": "https://json-schema.org/draft/2020-12/schema"
@@ -2584,6 +3626,469 @@
     "additionalProperties": false,
     "$schema": "https://json-schema.org/draft/2020-12/schema"
   },
+  "OperationsExecuteInput": {
+    "type": "object",
+    "properties": {
+      "planHandle": {
+        "type": "object",
+        "properties": {
+          "planId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "planHash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "target": {
+            "type": "object",
+            "properties": {
+              "app": {
+                "type": "string",
+                "enum": [
+                  "photoshop",
+                  "illustrator",
+                  "after-effects",
+                  "premiere-pro"
+                ]
+              },
+              "instanceId": {
+                "$ref": "#/properties/planHandle/properties/planId"
+              },
+              "projectId": {
+                "$ref": "#/properties/planHandle/properties/planId"
+              },
+              "documentId": {
+                "$ref": "#/properties/planHandle/properties/planId"
+              },
+              "entityId": {
+                "$ref": "#/properties/planHandle/properties/planId"
+              }
+            },
+            "required": [
+              "app"
+            ],
+            "additionalProperties": false
+          },
+          "toolName": {
+            "$ref": "#/properties/planHandle/properties/planId"
+          },
+          "risk": {
+            "type": "string",
+            "enum": [
+              "R0",
+              "R1",
+              "R2",
+              "R3",
+              "R4"
+            ]
+          },
+          "scope": {
+            "type": "object",
+            "properties": {
+              "entities": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "files": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "bytes": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "minutes": {
+                "type": "number",
+                "minimum": 0
+              }
+            },
+            "required": [
+              "entities",
+              "files",
+              "bytes",
+              "minutes"
+            ],
+            "additionalProperties": false
+          },
+          "expectedRevisions": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/properties/planHandle/properties/planId"
+            },
+            "propertyNames": {
+              "minLength": 1,
+              "maxLength": 256
+            }
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "commandsDigest": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "commands": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": {}
+            },
+            "minItems": 1,
+            "maxItems": 500
+          },
+          "snapshot": {
+            "type": "object",
+            "properties": {
+              "snapshotId": {
+                "$ref": "#/properties/planHandle/properties/planId"
+              },
+              "revision": {
+                "$ref": "#/properties/planHandle/properties/planId"
+              },
+              "sha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              },
+              "artifactUri": {
+                "type": "string",
+                "pattern": "^artifact:\\/\\/sha256-[a-f0-9]{64}$"
+              },
+              "verified": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "snapshotId",
+              "revision",
+              "sha256",
+              "artifactUri",
+              "verified"
+            ],
+            "additionalProperties": false
+          },
+          "preview": {
+            "type": "object",
+            "properties": {
+              "summary": {
+                "type": "string",
+                "maxLength": 2048
+              },
+              "diff": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "op": {
+                      "type": "string",
+                      "enum": [
+                        "create",
+                        "set",
+                        "transform",
+                        "delete",
+                        "export",
+                        "invoke"
+                      ]
+                    },
+                    "entityId": {
+                      "$ref": "#/properties/planHandle/properties/planId"
+                    },
+                    "before": {},
+                    "after": {}
+                  },
+                  "required": [
+                    "op"
+                  ],
+                  "additionalProperties": false
+                },
+                "maxItems": 500
+              },
+              "estimated": {
+                "type": "object",
+                "properties": {
+                  "entities": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "files": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "bytes": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "minutes": {
+                    "type": "number",
+                    "minimum": 0
+                  }
+                },
+                "required": [
+                  "entities",
+                  "files",
+                  "bytes",
+                  "minutes"
+                ],
+                "additionalProperties": false
+              },
+              "warnings": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "maxLength": 1024
+                },
+                "maxItems": 50
+              }
+            },
+            "required": [
+              "summary",
+              "diff",
+              "estimated",
+              "warnings"
+            ],
+            "additionalProperties": false
+          },
+          "immutable": {
+            "type": "boolean",
+            "const": true
+          }
+        },
+        "required": [
+          "planId",
+          "planHash",
+          "target",
+          "toolName",
+          "risk",
+          "scope",
+          "expectedRevisions",
+          "expiresAt",
+          "commandsDigest",
+          "commands",
+          "snapshot",
+          "preview",
+          "immutable"
+        ],
+        "additionalProperties": false
+      },
+      "approval": {},
+      "plan": {},
+      "options": {
+        "type": "object",
+        "properties": {
+          "operationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "expectedRevision": {
+            "$ref": "#/properties/planHandle/properties/planId"
+          },
+          "dryRun": {
+            "type": "boolean",
+            "default": false
+          },
+          "atomic": {
+            "type": "boolean",
+            "default": true
+          },
+          "conflictPolicy": {
+            "type": "string",
+            "enum": [
+              "fail",
+              "rebase-safe"
+            ],
+            "default": "fail"
+          },
+          "verification": {
+            "type": "string",
+            "enum": [
+              "none",
+              "state",
+              "render-proof"
+            ],
+            "default": "state"
+          },
+          "approvalToken": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          },
+          "explicitConfirmation": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "operationId"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "required": [
+      "planHandle",
+      "options"
+    ],
+    "additionalProperties": false,
+    "$schema": "https://json-schema.org/draft/2020-12/schema"
+  },
+  "OperationsExecuteResult": {
+    "type": "object",
+    "properties": {
+      "operationId": {
+        "type": "string",
+        "format": "uuid"
+      },
+      "planHash": {
+        "type": "string",
+        "pattern": "^[a-f0-9]{64}$"
+      },
+      "status": {
+        "type": "string",
+        "enum": [
+          "planned",
+          "applied",
+          "verified"
+        ]
+      },
+      "receipt": {
+        "type": "object",
+        "additionalProperties": {}
+      },
+      "verification": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "revision": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          }
+        },
+        "required": [
+          "ok",
+          "revision"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "required": [
+      "operationId",
+      "planHash",
+      "status",
+      "receipt",
+      "verification"
+    ],
+    "additionalProperties": false,
+    "$schema": "https://json-schema.org/draft/2020-12/schema"
+  },
+  "OperationsPlanInput": {
+    "type": "object",
+    "properties": {
+      "target": {
+        "type": "object",
+        "properties": {
+          "app": {
+            "type": "string",
+            "enum": [
+              "photoshop",
+              "illustrator",
+              "after-effects",
+              "premiere-pro"
+            ]
+          },
+          "instanceId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "projectId": {
+            "$ref": "#/properties/target/properties/instanceId"
+          },
+          "documentId": {
+            "$ref": "#/properties/target/properties/instanceId"
+          },
+          "entityId": {
+            "$ref": "#/properties/target/properties/instanceId"
+          }
+        },
+        "required": [
+          "app"
+        ],
+        "additionalProperties": false
+      },
+      "toolName": {
+        "$ref": "#/properties/target/properties/instanceId"
+      },
+      "commands": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "additionalProperties": {}
+        },
+        "minItems": 1,
+        "maxItems": 500
+      },
+      "options": {
+        "type": "object",
+        "properties": {
+          "operationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "expectedRevision": {
+            "$ref": "#/properties/target/properties/instanceId"
+          },
+          "dryRun": {
+            "type": "boolean",
+            "default": false
+          },
+          "atomic": {
+            "type": "boolean",
+            "default": true
+          },
+          "conflictPolicy": {
+            "type": "string",
+            "enum": [
+              "fail",
+              "rebase-safe"
+            ],
+            "default": "fail"
+          },
+          "verification": {
+            "type": "string",
+            "enum": [
+              "none",
+              "state",
+              "render-proof"
+            ],
+            "default": "state"
+          },
+          "approvalToken": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          },
+          "explicitConfirmation": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "operationId"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "required": [
+      "target",
+      "toolName",
+      "commands",
+      "options"
+    ],
+    "additionalProperties": false,
+    "$schema": "https://json-schema.org/draft/2020-12/schema"
+  },
   "PhotoshopAdjustmentSpec": {
     "type": "object",
     "properties": {
@@ -2728,6 +4233,124 @@
       "_obj"
     ],
     "additionalProperties": {},
+    "$schema": "https://json-schema.org/draft/2020-12/schema"
+  },
+  "PhotoshopChannelMask": {
+    "type": "object",
+    "properties": {
+      "target": {
+        "type": "object",
+        "properties": {
+          "app": {
+            "type": "string",
+            "enum": [
+              "photoshop",
+              "illustrator",
+              "after-effects",
+              "premiere-pro"
+            ]
+          },
+          "instanceId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "projectId": {
+            "$ref": "#/properties/target/properties/instanceId"
+          },
+          "documentId": {
+            "$ref": "#/properties/target/properties/instanceId"
+          },
+          "entityId": {
+            "$ref": "#/properties/target/properties/instanceId"
+          }
+        },
+        "required": [
+          "app"
+        ],
+        "additionalProperties": false
+      },
+      "layerId": {
+        "$ref": "#/properties/target/properties/instanceId"
+      },
+      "source": {
+        "type": "string",
+        "enum": [
+          "lights",
+          "midtones",
+          "shadows",
+          "alpha"
+        ]
+      },
+      "channelId": {
+        "$ref": "#/properties/target/properties/instanceId"
+      },
+      "invert": {
+        "type": "boolean",
+        "default": false
+      },
+      "featherPixels": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 10000,
+        "default": 0
+      },
+      "options": {
+        "type": "object",
+        "properties": {
+          "operationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "expectedRevision": {
+            "$ref": "#/properties/target/properties/instanceId"
+          },
+          "dryRun": {
+            "type": "boolean",
+            "default": false
+          },
+          "atomic": {
+            "type": "boolean",
+            "default": true
+          },
+          "conflictPolicy": {
+            "type": "string",
+            "enum": [
+              "fail",
+              "rebase-safe"
+            ],
+            "default": "fail"
+          },
+          "verification": {
+            "type": "string",
+            "enum": [
+              "none",
+              "state",
+              "render-proof"
+            ],
+            "default": "state"
+          },
+          "approvalToken": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          },
+          "explicitConfirmation": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "operationId"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "required": [
+      "target",
+      "source",
+      "options"
+    ],
+    "additionalProperties": false,
     "$schema": "https://json-schema.org/draft/2020-12/schema"
   },
   "PhotoshopFilterSpec": {
@@ -2986,6 +4609,225 @@
         "additionalProperties": false
       }
     ],
+    "$schema": "https://json-schema.org/draft/2020-12/schema"
+  },
+  "PhotoshopLayerExportAdvanced": {
+    "type": "object",
+    "properties": {
+      "target": {
+        "type": "object",
+        "properties": {
+          "app": {
+            "type": "string",
+            "enum": [
+              "photoshop",
+              "illustrator",
+              "after-effects",
+              "premiere-pro"
+            ]
+          },
+          "instanceId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "projectId": {
+            "$ref": "#/properties/target/properties/instanceId"
+          },
+          "documentId": {
+            "$ref": "#/properties/target/properties/instanceId"
+          },
+          "entityId": {
+            "$ref": "#/properties/target/properties/instanceId"
+          }
+        },
+        "required": [
+          "app"
+        ],
+        "additionalProperties": false
+      },
+      "layerIds": {
+        "type": "array",
+        "items": {
+          "$ref": "#/properties/target/properties/instanceId"
+        },
+        "maxItems": 10000
+      },
+      "groupIds": {
+        "type": "array",
+        "items": {
+          "$ref": "#/properties/target/properties/instanceId"
+        },
+        "maxItems": 1000
+      },
+      "format": {
+        "type": "string",
+        "enum": [
+          "png",
+          "psd"
+        ]
+      },
+      "scale": {
+        "type": "number",
+        "exclusiveMinimum": true,
+        "minimum": 0,
+        "maximum": 16,
+        "default": 1
+      },
+      "includeHidden": {
+        "type": "boolean",
+        "default": false
+      },
+      "isolate": {
+        "type": "boolean",
+        "default": true
+      },
+      "destination": {
+        "type": "object",
+        "properties": {
+          "grantId": {
+            "$ref": "#/properties/target/properties/instanceId"
+          },
+          "access": {
+            "type": "string",
+            "enum": [
+              "read",
+              "write",
+              "read-write"
+            ]
+          },
+          "suggestedName": {
+            "type": "string",
+            "maxLength": 255
+          }
+        },
+        "required": [
+          "grantId",
+          "access"
+        ],
+        "additionalProperties": false
+      },
+      "options": {
+        "type": "object",
+        "properties": {
+          "operationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "expectedRevision": {
+            "$ref": "#/properties/target/properties/instanceId"
+          },
+          "dryRun": {
+            "type": "boolean",
+            "default": false
+          },
+          "atomic": {
+            "type": "boolean",
+            "default": true
+          },
+          "conflictPolicy": {
+            "type": "string",
+            "enum": [
+              "fail",
+              "rebase-safe"
+            ],
+            "default": "fail"
+          },
+          "verification": {
+            "type": "string",
+            "enum": [
+              "none",
+              "state",
+              "render-proof"
+            ],
+            "default": "state"
+          },
+          "approvalToken": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          },
+          "explicitConfirmation": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "operationId"
+        ],
+        "additionalProperties": false
+      },
+      "planHandle": {},
+      "approval": {},
+      "plan": {}
+    },
+    "required": [
+      "target",
+      "format",
+      "destination",
+      "options"
+    ],
+    "additionalProperties": false,
+    "$schema": "https://json-schema.org/draft/2020-12/schema"
+  },
+  "PhotoshopLayerExportAdvancedResult": {
+    "type": "object",
+    "properties": {
+      "manifestUri": {
+        "type": "string",
+        "pattern": "^artifact:\\/\\/sha256-[a-f0-9]{64}$"
+      },
+      "artifacts": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "layerId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            "name": {
+              "$ref": "#/properties/artifacts/items/properties/layerId"
+            },
+            "uri": {
+              "type": "string",
+              "pattern": "^artifact:\\/\\/sha256-[a-f0-9]{64}$"
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "mediaType": {
+              "type": "string"
+            },
+            "width": {
+              "type": "integer",
+              "exclusiveMinimum": true,
+              "minimum": 0
+            },
+            "height": {
+              "type": "integer",
+              "exclusiveMinimum": true,
+              "minimum": 0
+            }
+          },
+          "required": [
+            "layerId",
+            "name",
+            "uri",
+            "sha256",
+            "mediaType"
+          ],
+          "additionalProperties": false
+        },
+        "maxItems": 10000
+      }
+    },
+    "required": [
+      "manifestUri",
+      "artifacts"
+    ],
+    "additionalProperties": false,
     "$schema": "https://json-schema.org/draft/2020-12/schema"
   },
   "PhotoshopLayerExportResult": {
@@ -3268,6 +5110,179 @@
     "additionalProperties": false,
     "$schema": "https://json-schema.org/draft/2020-12/schema"
   },
+  "PhotoshopLayerStyle": {
+    "type": "object",
+    "properties": {
+      "target": {
+        "type": "object",
+        "properties": {
+          "app": {
+            "type": "string",
+            "enum": [
+              "photoshop",
+              "illustrator",
+              "after-effects",
+              "premiere-pro"
+            ]
+          },
+          "instanceId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "projectId": {
+            "$ref": "#/properties/target/properties/instanceId"
+          },
+          "documentId": {
+            "$ref": "#/properties/target/properties/instanceId"
+          },
+          "entityId": {
+            "$ref": "#/properties/target/properties/instanceId"
+          }
+        },
+        "required": [
+          "app"
+        ],
+        "additionalProperties": false
+      },
+      "layerId": {
+        "$ref": "#/properties/target/properties/instanceId"
+      },
+      "style": {
+        "type": "string",
+        "enum": [
+          "dropShadow",
+          "stroke",
+          "bevelEmboss",
+          "innerGlow",
+          "outerGlow",
+          "colorOverlay",
+          "gradientFill"
+        ]
+      },
+      "enabled": {
+        "type": "boolean",
+        "default": true
+      },
+      "opacity": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 100
+      },
+      "angle": {
+        "type": "number"
+      },
+      "size": {
+        "type": "number",
+        "minimum": 0
+      },
+      "spread": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 100
+      },
+      "color": {
+        "type": "object",
+        "properties": {
+          "space": {
+            "type": "string",
+            "enum": [
+              "rgb",
+              "cmyk",
+              "lab",
+              "gray"
+            ]
+          },
+          "components": {
+            "type": "array",
+            "items": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "minItems": 1,
+            "maxItems": 4
+          },
+          "alpha": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "default": 1
+          }
+        },
+        "required": [
+          "space",
+          "components"
+        ],
+        "additionalProperties": false
+      },
+      "gradient": {
+        "type": "array",
+        "items": {
+          "$ref": "#/properties/color"
+        },
+        "minItems": 2,
+        "maxItems": 32
+      },
+      "options": {
+        "type": "object",
+        "properties": {
+          "operationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "expectedRevision": {
+            "$ref": "#/properties/target/properties/instanceId"
+          },
+          "dryRun": {
+            "type": "boolean",
+            "default": false
+          },
+          "atomic": {
+            "type": "boolean",
+            "default": true
+          },
+          "conflictPolicy": {
+            "type": "string",
+            "enum": [
+              "fail",
+              "rebase-safe"
+            ],
+            "default": "fail"
+          },
+          "verification": {
+            "type": "string",
+            "enum": [
+              "none",
+              "state",
+              "render-proof"
+            ],
+            "default": "state"
+          },
+          "approvalToken": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          },
+          "explicitConfirmation": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "operationId"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "required": [
+      "target",
+      "layerId",
+      "style",
+      "options"
+    ],
+    "additionalProperties": false,
+    "$schema": "https://json-schema.org/draft/2020-12/schema"
+  },
   "PhotoshopSmartObjectSpec": {
     "type": "object",
     "properties": {
@@ -3293,6 +5308,199 @@
     },
     "required": [
       "action"
+    ],
+    "additionalProperties": false,
+    "$schema": "https://json-schema.org/draft/2020-12/schema"
+  },
+  "PhotoshopSmartSelection": {
+    "type": "object",
+    "properties": {
+      "target": {
+        "type": "object",
+        "properties": {
+          "app": {
+            "type": "string",
+            "enum": [
+              "photoshop",
+              "illustrator",
+              "after-effects",
+              "premiere-pro"
+            ]
+          },
+          "instanceId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "projectId": {
+            "$ref": "#/properties/target/properties/instanceId"
+          },
+          "documentId": {
+            "$ref": "#/properties/target/properties/instanceId"
+          },
+          "entityId": {
+            "$ref": "#/properties/target/properties/instanceId"
+          }
+        },
+        "required": [
+          "app"
+        ],
+        "additionalProperties": false
+      },
+      "mode": {
+        "type": "string",
+        "enum": [
+          "selectSubject",
+          "colorRange",
+          "objectSelection"
+        ]
+      },
+      "colorRange": {
+        "type": "object",
+        "properties": {
+          "color": {
+            "type": "object",
+            "properties": {
+              "space": {
+                "type": "string",
+                "enum": [
+                  "rgb",
+                  "cmyk",
+                  "lab",
+                  "gray"
+                ]
+              },
+              "components": {
+                "type": "array",
+                "items": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "minItems": 1,
+                "maxItems": 4
+              },
+              "alpha": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1,
+                "default": 1
+              }
+            },
+            "required": [
+              "space",
+              "components"
+            ],
+            "additionalProperties": false
+          },
+          "fuzziness": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 200,
+            "default": 40
+          },
+          "hue": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 360
+          }
+        },
+        "required": [
+          "color"
+        ],
+        "additionalProperties": false
+      },
+      "boundingBox": {
+        "type": "object",
+        "properties": {
+          "x": {
+            "type": "number"
+          },
+          "y": {
+            "type": "number"
+          },
+          "width": {
+            "type": "number",
+            "exclusiveMinimum": true,
+            "minimum": 0
+          },
+          "height": {
+            "type": "number",
+            "exclusiveMinimum": true,
+            "minimum": 0
+          },
+          "unit": {
+            "type": "string",
+            "enum": [
+              "px",
+              "pt",
+              "percent"
+            ],
+            "default": "px"
+          }
+        },
+        "required": [
+          "x",
+          "y",
+          "width",
+          "height"
+        ],
+        "additionalProperties": false
+      },
+      "options": {
+        "type": "object",
+        "properties": {
+          "operationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "expectedRevision": {
+            "$ref": "#/properties/target/properties/instanceId"
+          },
+          "dryRun": {
+            "type": "boolean",
+            "default": false
+          },
+          "atomic": {
+            "type": "boolean",
+            "default": true
+          },
+          "conflictPolicy": {
+            "type": "string",
+            "enum": [
+              "fail",
+              "rebase-safe"
+            ],
+            "default": "fail"
+          },
+          "verification": {
+            "type": "string",
+            "enum": [
+              "none",
+              "state",
+              "render-proof"
+            ],
+            "default": "state"
+          },
+          "approvalToken": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          },
+          "explicitConfirmation": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "operationId"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "required": [
+      "target",
+      "mode",
+      "options"
     ],
     "additionalProperties": false,
     "$schema": "https://json-schema.org/draft/2020-12/schema"
@@ -3413,6 +5621,367 @@
       "expectedRevisions",
       "expiresAt",
       "commandsDigest"
+    ],
+    "additionalProperties": false,
+    "$schema": "https://json-schema.org/draft/2020-12/schema"
+  },
+  "PlanHandle": {
+    "type": "object",
+    "properties": {
+      "planId": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 256
+      },
+      "planHash": {
+        "type": "string",
+        "pattern": "^[a-f0-9]{64}$"
+      },
+      "target": {
+        "type": "object",
+        "properties": {
+          "app": {
+            "type": "string",
+            "enum": [
+              "photoshop",
+              "illustrator",
+              "after-effects",
+              "premiere-pro"
+            ]
+          },
+          "instanceId": {
+            "$ref": "#/properties/planId"
+          },
+          "projectId": {
+            "$ref": "#/properties/planId"
+          },
+          "documentId": {
+            "$ref": "#/properties/planId"
+          },
+          "entityId": {
+            "$ref": "#/properties/planId"
+          }
+        },
+        "required": [
+          "app"
+        ],
+        "additionalProperties": false
+      },
+      "toolName": {
+        "$ref": "#/properties/planId"
+      },
+      "risk": {
+        "type": "string",
+        "enum": [
+          "R0",
+          "R1",
+          "R2",
+          "R3",
+          "R4"
+        ]
+      },
+      "scope": {
+        "type": "object",
+        "properties": {
+          "entities": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "files": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "bytes": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "minutes": {
+            "type": "number",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "entities",
+          "files",
+          "bytes",
+          "minutes"
+        ],
+        "additionalProperties": false
+      },
+      "expectedRevisions": {
+        "type": "object",
+        "additionalProperties": {
+          "$ref": "#/properties/planId"
+        },
+        "propertyNames": {
+          "minLength": 1,
+          "maxLength": 256
+        }
+      },
+      "expiresAt": {
+        "type": "string",
+        "format": "date-time"
+      },
+      "commandsDigest": {
+        "type": "string",
+        "pattern": "^[a-f0-9]{64}$"
+      },
+      "commands": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "additionalProperties": {}
+        },
+        "minItems": 1,
+        "maxItems": 500
+      },
+      "snapshot": {
+        "type": "object",
+        "properties": {
+          "snapshotId": {
+            "$ref": "#/properties/planId"
+          },
+          "revision": {
+            "$ref": "#/properties/planId"
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "artifactUri": {
+            "type": "string",
+            "pattern": "^artifact:\\/\\/sha256-[a-f0-9]{64}$"
+          },
+          "verified": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "snapshotId",
+          "revision",
+          "sha256",
+          "artifactUri",
+          "verified"
+        ],
+        "additionalProperties": false
+      },
+      "preview": {
+        "type": "object",
+        "properties": {
+          "summary": {
+            "type": "string",
+            "maxLength": 2048
+          },
+          "diff": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "op": {
+                  "type": "string",
+                  "enum": [
+                    "create",
+                    "set",
+                    "transform",
+                    "delete",
+                    "export",
+                    "invoke"
+                  ]
+                },
+                "entityId": {
+                  "$ref": "#/properties/planId"
+                },
+                "before": {},
+                "after": {}
+              },
+              "required": [
+                "op"
+              ],
+              "additionalProperties": false
+            },
+            "maxItems": 500
+          },
+          "estimated": {
+            "type": "object",
+            "properties": {
+              "entities": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "files": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "bytes": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "minutes": {
+                "type": "number",
+                "minimum": 0
+              }
+            },
+            "required": [
+              "entities",
+              "files",
+              "bytes",
+              "minutes"
+            ],
+            "additionalProperties": false
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "maxLength": 1024
+            },
+            "maxItems": 50
+          }
+        },
+        "required": [
+          "summary",
+          "diff",
+          "estimated",
+          "warnings"
+        ],
+        "additionalProperties": false
+      },
+      "immutable": {
+        "type": "boolean",
+        "const": true
+      }
+    },
+    "required": [
+      "planId",
+      "planHash",
+      "target",
+      "toolName",
+      "risk",
+      "scope",
+      "expectedRevisions",
+      "expiresAt",
+      "commandsDigest",
+      "commands",
+      "snapshot",
+      "preview",
+      "immutable"
+    ],
+    "additionalProperties": false,
+    "$schema": "https://json-schema.org/draft/2020-12/schema"
+  },
+  "PlanPreview": {
+    "type": "object",
+    "properties": {
+      "summary": {
+        "type": "string",
+        "maxLength": 2048
+      },
+      "diff": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "op": {
+              "type": "string",
+              "enum": [
+                "create",
+                "set",
+                "transform",
+                "delete",
+                "export",
+                "invoke"
+              ]
+            },
+            "entityId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            "before": {},
+            "after": {}
+          },
+          "required": [
+            "op"
+          ],
+          "additionalProperties": false
+        },
+        "maxItems": 500
+      },
+      "estimated": {
+        "type": "object",
+        "properties": {
+          "entities": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "files": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "bytes": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "minutes": {
+            "type": "number",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "entities",
+          "files",
+          "bytes",
+          "minutes"
+        ],
+        "additionalProperties": false
+      },
+      "warnings": {
+        "type": "array",
+        "items": {
+          "type": "string",
+          "maxLength": 1024
+        },
+        "maxItems": 50
+      }
+    },
+    "required": [
+      "summary",
+      "diff",
+      "estimated",
+      "warnings"
+    ],
+    "additionalProperties": false,
+    "$schema": "https://json-schema.org/draft/2020-12/schema"
+  },
+  "PlanSnapshot": {
+    "type": "object",
+    "properties": {
+      "snapshotId": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 256
+      },
+      "revision": {
+        "$ref": "#/properties/snapshotId"
+      },
+      "sha256": {
+        "type": "string",
+        "pattern": "^[a-f0-9]{64}$"
+      },
+      "artifactUri": {
+        "type": "string",
+        "pattern": "^artifact:\\/\\/sha256-[a-f0-9]{64}$"
+      },
+      "verified": {
+        "type": "boolean"
+      }
+    },
+    "required": [
+      "snapshotId",
+      "revision",
+      "sha256",
+      "artifactUri",
+      "verified"
     ],
     "additionalProperties": false,
     "$schema": "https://json-schema.org/draft/2020-12/schema"
@@ -4592,6 +7161,274 @@
     ],
     "$schema": "https://json-schema.org/draft/2020-12/schema"
   },
+  "PremiereLumetriGrade": {
+    "type": "object",
+    "properties": {
+      "target": {
+        "type": "object",
+        "properties": {
+          "app": {
+            "type": "string",
+            "enum": [
+              "photoshop",
+              "illustrator",
+              "after-effects",
+              "premiere-pro"
+            ]
+          },
+          "instanceId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "projectId": {
+            "$ref": "#/properties/target/properties/instanceId"
+          },
+          "documentId": {
+            "$ref": "#/properties/target/properties/instanceId"
+          },
+          "entityId": {
+            "$ref": "#/properties/target/properties/instanceId"
+          }
+        },
+        "required": [
+          "app"
+        ],
+        "additionalProperties": false
+      },
+      "clipIds": {
+        "type": "array",
+        "items": {
+          "$ref": "#/properties/target/properties/instanceId"
+        },
+        "minItems": 1,
+        "maxItems": 500
+      },
+      "basic": {
+        "type": "object",
+        "properties": {
+          "exposure": {
+            "type": "number",
+            "minimum": -10,
+            "maximum": 10
+          },
+          "contrast": {
+            "type": "number",
+            "minimum": -100,
+            "maximum": 100
+          },
+          "whites": {
+            "type": "number",
+            "minimum": -100,
+            "maximum": 100
+          },
+          "blacks": {
+            "type": "number",
+            "minimum": -100,
+            "maximum": 100
+          },
+          "temperature": {
+            "type": "number",
+            "minimum": -100,
+            "maximum": 100
+          },
+          "tint": {
+            "type": "number",
+            "minimum": -100,
+            "maximum": 100
+          }
+        },
+        "additionalProperties": false
+      },
+      "wheels": {
+        "type": "object",
+        "properties": {
+          "shadows": {
+            "type": "object",
+            "properties": {
+              "space": {
+                "type": "string",
+                "enum": [
+                  "rgb",
+                  "cmyk",
+                  "lab",
+                  "gray"
+                ]
+              },
+              "components": {
+                "type": "array",
+                "items": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "minItems": 1,
+                "maxItems": 4
+              },
+              "alpha": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1,
+                "default": 1
+              }
+            },
+            "required": [
+              "space",
+              "components"
+            ],
+            "additionalProperties": false
+          },
+          "midtones": {
+            "$ref": "#/properties/wheels/properties/shadows"
+          },
+          "highlights": {
+            "$ref": "#/properties/wheels/properties/shadows"
+          }
+        },
+        "additionalProperties": false
+      },
+      "curves": {
+        "type": "object",
+        "properties": {
+          "rgb": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": [
+                {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                }
+              ]
+            },
+            "maxItems": 256
+          },
+          "hueVsSaturation": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": [
+                {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                }
+              ]
+            },
+            "maxItems": 256
+          }
+        },
+        "additionalProperties": false
+      },
+      "lut": {
+        "type": "object",
+        "properties": {
+          "uri": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^artifact:\\/\\/sha256-[a-f0-9]{64}$"
+              },
+              {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4096
+              }
+            ]
+          },
+          "format": {
+            "type": "string",
+            "enum": [
+              "cube",
+              "look"
+            ]
+          },
+          "intensity": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "default": 1
+          }
+        },
+        "required": [
+          "uri",
+          "format"
+        ],
+        "additionalProperties": false
+      },
+      "options": {
+        "type": "object",
+        "properties": {
+          "operationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "expectedRevision": {
+            "$ref": "#/properties/target/properties/instanceId"
+          },
+          "dryRun": {
+            "type": "boolean",
+            "default": false
+          },
+          "atomic": {
+            "type": "boolean",
+            "default": true
+          },
+          "conflictPolicy": {
+            "type": "string",
+            "enum": [
+              "fail",
+              "rebase-safe"
+            ],
+            "default": "fail"
+          },
+          "verification": {
+            "type": "string",
+            "enum": [
+              "none",
+              "state",
+              "render-proof"
+            ],
+            "default": "state"
+          },
+          "approvalToken": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          },
+          "explicitConfirmation": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "operationId"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "required": [
+      "target",
+      "clipIds",
+      "options"
+    ],
+    "additionalProperties": false,
+    "$schema": "https://json-schema.org/draft/2020-12/schema"
+  },
   "PremiereMarkerCommand": {
     "anyOf": [
       {
@@ -4796,6 +7633,140 @@
     ],
     "$schema": "https://json-schema.org/draft/2020-12/schema"
   },
+  "PremiereMogrtParametrize": {
+    "type": "object",
+    "properties": {
+      "target": {
+        "type": "object",
+        "properties": {
+          "app": {
+            "type": "string",
+            "enum": [
+              "photoshop",
+              "illustrator",
+              "after-effects",
+              "premiere-pro"
+            ]
+          },
+          "instanceId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "projectId": {
+            "$ref": "#/properties/target/properties/instanceId"
+          },
+          "documentId": {
+            "$ref": "#/properties/target/properties/instanceId"
+          },
+          "entityId": {
+            "$ref": "#/properties/target/properties/instanceId"
+          }
+        },
+        "required": [
+          "app"
+        ],
+        "additionalProperties": false
+      },
+      "clipId": {
+        "$ref": "#/properties/target/properties/instanceId"
+      },
+      "templateFingerprint": {
+        "$ref": "#/properties/target/properties/instanceId"
+      },
+      "parameters": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "key": {
+              "$ref": "#/properties/target/properties/instanceId"
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "text",
+                "color",
+                "number",
+                "boolean",
+                "media"
+              ]
+            },
+            "value": {},
+            "mediaArtifactUri": {
+              "type": "string",
+              "pattern": "^artifact:\\/\\/sha256-[a-f0-9]{64}$"
+            }
+          },
+          "required": [
+            "key",
+            "type"
+          ],
+          "additionalProperties": false
+        },
+        "minItems": 1,
+        "maxItems": 500
+      },
+      "options": {
+        "type": "object",
+        "properties": {
+          "operationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "expectedRevision": {
+            "$ref": "#/properties/target/properties/instanceId"
+          },
+          "dryRun": {
+            "type": "boolean",
+            "default": false
+          },
+          "atomic": {
+            "type": "boolean",
+            "default": true
+          },
+          "conflictPolicy": {
+            "type": "string",
+            "enum": [
+              "fail",
+              "rebase-safe"
+            ],
+            "default": "fail"
+          },
+          "verification": {
+            "type": "string",
+            "enum": [
+              "none",
+              "state",
+              "render-proof"
+            ],
+            "default": "state"
+          },
+          "approvalToken": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          },
+          "explicitConfirmation": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "operationId"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "required": [
+      "target",
+      "clipId",
+      "templateFingerprint",
+      "parameters",
+      "options"
+    ],
+    "additionalProperties": false,
+    "$schema": "https://json-schema.org/draft/2020-12/schema"
+  },
   "PremiereProjectCommand": {
     "anyOf": [
       {
@@ -4941,6 +7912,165 @@
         "additionalProperties": false
       }
     ],
+    "$schema": "https://json-schema.org/draft/2020-12/schema"
+  },
+  "PremiereProjectOrganize": {
+    "type": "object",
+    "properties": {
+      "target": {
+        "type": "object",
+        "properties": {
+          "app": {
+            "type": "string",
+            "enum": [
+              "photoshop",
+              "illustrator",
+              "after-effects",
+              "premiere-pro"
+            ]
+          },
+          "instanceId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "projectId": {
+            "$ref": "#/properties/target/properties/instanceId"
+          },
+          "documentId": {
+            "$ref": "#/properties/target/properties/instanceId"
+          },
+          "entityId": {
+            "$ref": "#/properties/target/properties/instanceId"
+          }
+        },
+        "required": [
+          "app"
+        ],
+        "additionalProperties": false
+      },
+      "createBins": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "$ref": "#/properties/target/properties/instanceId"
+            },
+            "name": {
+              "$ref": "#/properties/target/properties/instanceId"
+            },
+            "parentId": {
+              "$ref": "#/properties/target/properties/instanceId"
+            }
+          },
+          "required": [
+            "name"
+          ],
+          "additionalProperties": false
+        },
+        "maxItems": 1000,
+        "default": []
+      },
+      "imports": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "source": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 4096
+                },
+                {
+                  "type": "string",
+                  "pattern": "^artifact:\\/\\/sha256-[a-f0-9]{64}$"
+                }
+              ]
+            },
+            "binId": {
+              "$ref": "#/properties/target/properties/instanceId"
+            },
+            "labelColor": {
+              "type": "string",
+              "enum": [
+                "none",
+                "red",
+                "orange",
+                "yellow",
+                "green",
+                "blue",
+                "purple",
+                "pink"
+              ],
+              "default": "none"
+            }
+          },
+          "required": [
+            "source"
+          ],
+          "additionalProperties": false
+        },
+        "maxItems": 1000,
+        "default": []
+      },
+      "options": {
+        "type": "object",
+        "properties": {
+          "operationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "expectedRevision": {
+            "$ref": "#/properties/target/properties/instanceId"
+          },
+          "dryRun": {
+            "type": "boolean",
+            "default": false
+          },
+          "atomic": {
+            "type": "boolean",
+            "default": true
+          },
+          "conflictPolicy": {
+            "type": "string",
+            "enum": [
+              "fail",
+              "rebase-safe"
+            ],
+            "default": "fail"
+          },
+          "verification": {
+            "type": "string",
+            "enum": [
+              "none",
+              "state",
+              "render-proof"
+            ],
+            "default": "state"
+          },
+          "approvalToken": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          },
+          "explicitConfirmation": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "operationId"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "required": [
+      "target",
+      "options"
+    ],
+    "additionalProperties": false,
     "$schema": "https://json-schema.org/draft/2020-12/schema"
   },
   "PremiereSequenceCommand": {
@@ -6660,6 +9790,465 @@
       "app"
     ],
     "additionalProperties": false,
+    "$schema": "https://json-schema.org/draft/2020-12/schema"
+  },
+  "ToolApp": {
+    "type": "string",
+    "enum": [
+      "photoshop",
+      "illustrator",
+      "after-effects",
+      "premiere-pro"
+    ],
+    "$schema": "https://json-schema.org/draft/2020-12/schema"
+  },
+  "ToolCatalogEntry": {
+    "type": "object",
+    "properties": {
+      "name": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 256
+      },
+      "description": {
+        "type": "string",
+        "maxLength": 2048
+      },
+      "app": {
+        "type": "string",
+        "enum": [
+          "photoshop",
+          "illustrator",
+          "after-effects",
+          "premiere-pro"
+        ]
+      },
+      "categories": {
+        "type": "array",
+        "items": {
+          "type": "string",
+          "enum": [
+            "color",
+            "timeline",
+            "selection",
+            "shapes",
+            "export",
+            "typography",
+            "media",
+            "render",
+            "project",
+            "layer",
+            "channel",
+            "expression"
+          ]
+        },
+        "maxItems": 8
+      },
+      "risk": {
+        "type": "string",
+        "enum": [
+          "R0",
+          "R1",
+          "R2",
+          "R3",
+          "R4"
+        ]
+      },
+      "mutating": {
+        "type": "boolean"
+      },
+      "verification": {
+        "type": "string",
+        "enum": [
+          "implemented",
+          "host_verified",
+          "experimental",
+          "unavailable"
+        ]
+      },
+      "requiredCapabilities": {
+        "type": "array",
+        "items": {
+          "type": "string",
+          "maxLength": 128
+        },
+        "maxItems": 32
+      }
+    },
+    "required": [
+      "name",
+      "description",
+      "categories",
+      "risk",
+      "mutating",
+      "verification",
+      "requiredCapabilities"
+    ],
+    "additionalProperties": false,
+    "$schema": "https://json-schema.org/draft/2020-12/schema"
+  },
+  "ToolCategory": {
+    "type": "string",
+    "enum": [
+      "color",
+      "timeline",
+      "selection",
+      "shapes",
+      "export",
+      "typography",
+      "media",
+      "render",
+      "project",
+      "layer",
+      "channel",
+      "expression"
+    ],
+    "$schema": "https://json-schema.org/draft/2020-12/schema"
+  },
+  "ToolDescribeInput": {
+    "type": "object",
+    "properties": {
+      "name": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 256
+      }
+    },
+    "required": [
+      "name"
+    ],
+    "additionalProperties": false,
+    "$schema": "https://json-schema.org/draft/2020-12/schema"
+  },
+  "ToolDescribeResult": {
+    "type": "object",
+    "properties": {
+      "tool": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 2048
+          },
+          "app": {
+            "type": "string",
+            "enum": [
+              "photoshop",
+              "illustrator",
+              "after-effects",
+              "premiere-pro"
+            ]
+          },
+          "categories": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "color",
+                "timeline",
+                "selection",
+                "shapes",
+                "export",
+                "typography",
+                "media",
+                "render",
+                "project",
+                "layer",
+                "channel",
+                "expression"
+              ]
+            },
+            "maxItems": 8
+          },
+          "risk": {
+            "type": "string",
+            "enum": [
+              "R0",
+              "R1",
+              "R2",
+              "R3",
+              "R4"
+            ]
+          },
+          "mutating": {
+            "type": "boolean"
+          },
+          "verification": {
+            "type": "string",
+            "enum": [
+              "implemented",
+              "host_verified",
+              "experimental",
+              "unavailable"
+            ]
+          },
+          "requiredCapabilities": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "maxLength": 128
+            },
+            "maxItems": 32
+          }
+        },
+        "required": [
+          "name",
+          "description",
+          "categories",
+          "risk",
+          "mutating",
+          "verification",
+          "requiredCapabilities"
+        ],
+        "additionalProperties": false
+      },
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": {}
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": {}
+      },
+      "examples": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "title": {
+              "type": "string",
+              "maxLength": 256
+            },
+            "input": {
+              "type": "object",
+              "additionalProperties": {}
+            },
+            "expected": {
+              "type": "object",
+              "additionalProperties": {}
+            }
+          },
+          "required": [
+            "title",
+            "input"
+          ],
+          "additionalProperties": false
+        },
+        "maxItems": 20
+      },
+      "limitations": {
+        "type": "array",
+        "items": {
+          "type": "string",
+          "maxLength": 1024
+        },
+        "maxItems": 20
+      },
+      "verifiedAt": {
+        "type": "string",
+        "format": "date-time"
+      }
+    },
+    "required": [
+      "tool",
+      "inputSchema",
+      "outputSchema",
+      "examples",
+      "limitations"
+    ],
+    "additionalProperties": false,
+    "$schema": "https://json-schema.org/draft/2020-12/schema"
+  },
+  "ToolDiscoveryInput": {
+    "type": "object",
+    "properties": {
+      "app": {
+        "type": "string",
+        "enum": [
+          "photoshop",
+          "illustrator",
+          "after-effects",
+          "premiere-pro"
+        ]
+      },
+      "category": {
+        "type": "string",
+        "enum": [
+          "color",
+          "timeline",
+          "selection",
+          "shapes",
+          "export",
+          "typography",
+          "media",
+          "render",
+          "project",
+          "layer",
+          "channel",
+          "expression"
+        ]
+      },
+      "risk": {
+        "type": "string",
+        "enum": [
+          "R0",
+          "R1",
+          "R2",
+          "R3",
+          "R4"
+        ]
+      },
+      "query": {
+        "type": "string",
+        "maxLength": 256
+      },
+      "verification": {
+        "type": "string",
+        "enum": [
+          "implemented",
+          "host_verified",
+          "experimental",
+          "unavailable"
+        ]
+      },
+      "includeUnavailable": {
+        "type": "boolean",
+        "default": false
+      },
+      "cursor": {
+        "type": "string",
+        "maxLength": 2048
+      },
+      "limit": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 200,
+        "default": 50
+      }
+    },
+    "additionalProperties": false,
+    "$schema": "https://json-schema.org/draft/2020-12/schema"
+  },
+  "ToolDiscoveryResult": {
+    "type": "object",
+    "properties": {
+      "tools": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            "description": {
+              "type": "string",
+              "maxLength": 2048
+            },
+            "app": {
+              "type": "string",
+              "enum": [
+                "photoshop",
+                "illustrator",
+                "after-effects",
+                "premiere-pro"
+              ]
+            },
+            "categories": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "color",
+                  "timeline",
+                  "selection",
+                  "shapes",
+                  "export",
+                  "typography",
+                  "media",
+                  "render",
+                  "project",
+                  "layer",
+                  "channel",
+                  "expression"
+                ]
+              },
+              "maxItems": 8
+            },
+            "risk": {
+              "type": "string",
+              "enum": [
+                "R0",
+                "R1",
+                "R2",
+                "R3",
+                "R4"
+              ]
+            },
+            "mutating": {
+              "type": "boolean"
+            },
+            "verification": {
+              "type": "string",
+              "enum": [
+                "implemented",
+                "host_verified",
+                "experimental",
+                "unavailable"
+              ]
+            },
+            "requiredCapabilities": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "maxLength": 128
+              },
+              "maxItems": 32
+            }
+          },
+          "required": [
+            "name",
+            "description",
+            "categories",
+            "risk",
+            "mutating",
+            "verification",
+            "requiredCapabilities"
+          ],
+          "additionalProperties": false
+        },
+        "maxItems": 200
+      },
+      "nextCursor": {
+        "type": "string",
+        "maxLength": 2048
+      },
+      "total": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "required": [
+      "tools",
+      "total"
+    ],
+    "additionalProperties": false,
+    "$schema": "https://json-schema.org/draft/2020-12/schema"
+  },
+  "VerificationLevel": {
+    "type": "string",
+    "enum": [
+      "implemented",
+      "host_verified",
+      "experimental",
+      "unavailable"
+    ],
     "$schema": "https://json-schema.org/draft/2020-12/schema"
   },
   "VisualVerifyData": {

@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import type { z } from "zod";
-import { PhotoshopAdjustmentSpec, PhotoshopBatchPlayCommand, PhotoshopBatchPlayDescriptor, PhotoshopFilterSpec, PhotoshopLayerMaskSpec, PhotoshopSmartObjectSpec, type ArtifactRef } from "@adobe-mcp/schemas";
+import { PhotoshopAdjustmentSpec, PhotoshopBatchPlayCommand, PhotoshopBatchPlayDescriptor, PhotoshopChannelMask, PhotoshopFilterSpec, PhotoshopLayerMaskSpec, PhotoshopLayerStyle, PhotoshopSmartObjectSpec, PhotoshopSmartSelection, type ArtifactRef } from "@adobe-mcp/schemas";
 
 export type BatchPlayDescriptor = ReturnType<typeof PhotoshopBatchPlayDescriptor.parse>;
 export type BatchPlayCommand = ReturnType<typeof PhotoshopBatchPlayCommand.parse>;
@@ -43,6 +43,30 @@ export function replaceLinkedSmartObject(layerId: string, artifactId: string): B
 export function editEmbeddedSmartObject(layerId: string): BatchPlayCommand { return createSmartObject({ action: "edit-embedded", layerId }); }
 export function applyNeuralFilter(parameters: Record<string, unknown> = {}): BatchPlayCommand { return command("apply", { _obj: "neuralFilter", parameters: PhotoshopFilterSpec.parse({ filter: "neural", parameters }).parameters }); }
 export function applyCameraRaw(parameters: Record<string, unknown> = {}): BatchPlayCommand { return command("apply", { _obj: "cameraRawFilter", parameters: PhotoshopFilterSpec.parse({ filter: "camera-raw", parameters }).parameters }); }
+
+/** Allowlisted smart-selection builders. The host decides availability by version probe. */
+export function selectSubject(spec: Omit<z.input<typeof PhotoshopSmartSelection>, "mode">): BatchPlayCommand {
+  const value = PhotoshopSmartSelection.parse({ ...spec, mode: "selectSubject" });
+  return command("apply", { _obj: "autoCutout", _target: [{ _ref: "document", _enum: "ordinal", _value: "targetEnum" }], sampleAllLayers: false, ...(value.options.dryRun ? { dryRun: true } : {}) });
+}
+export function colorRange(spec: Omit<z.input<typeof PhotoshopSmartSelection>, "mode"> & { colorRange: NonNullable<z.input<typeof PhotoshopSmartSelection>["colorRange"]> }): BatchPlayCommand {
+  const value = PhotoshopSmartSelection.parse({ ...spec, mode: "colorRange" });
+  return command("apply", { _obj: "colorRange", fuzziness: value.colorRange!.fuzziness, color: value.colorRange!.color, ...(value.colorRange!.hue === undefined ? {} : { hue: value.colorRange!.hue }) });
+}
+export function objectSelection(spec: Omit<z.input<typeof PhotoshopSmartSelection>, "mode"> & { boundingBox: NonNullable<z.input<typeof PhotoshopSmartSelection>["boundingBox"]> }): BatchPlayCommand {
+  const value = PhotoshopSmartSelection.parse({ ...spec, mode: "objectSelection" });
+  return command("apply", { _obj: "selectObject", bounds: value.boundingBox });
+}
+export function applyLayerStyle(spec: z.input<typeof PhotoshopLayerStyle>): BatchPlayCommand {
+  const value = PhotoshopLayerStyle.parse(spec);
+  const effect = { _obj: value.style, enabled: value.enabled, ...(value.opacity === undefined ? {} : { opacity: value.opacity }), ...(value.angle === undefined ? {} : { angle: value.angle }), ...(value.size === undefined ? {} : { size: value.size }), ...(value.spread === undefined ? {} : { spread: value.spread }), ...(value.color === undefined ? {} : { color: value.color }), ...(value.gradient === undefined ? {} : { gradient: value.gradient }) };
+  return command("set", { _obj: "layer", _target: target(value.layerId), to: { _obj: "layer", layerEffects: { [value.style]: effect } } });
+}
+export function createLuminosityMask(spec: z.input<typeof PhotoshopChannelMask>): BatchPlayCommand {
+  const value = PhotoshopChannelMask.parse(spec);
+  return command("create", { _obj: "luminosityMask", _target: [{ _ref: "document", _enum: "ordinal", _value: "targetEnum" }], source: value.source, layerId: value.layerId, channelId: value.channelId, invert: value.invert, featherPixels: value.featherPixels });
+}
+export function createAlphaMask(spec: Omit<z.input<typeof PhotoshopChannelMask>, "source"> & { channelId: string }): BatchPlayCommand { return createLuminosityMask({ ...spec, source: "alpha" }); }
 
 export function buildBatchPlay(commands: readonly BatchPlayCommand[]): readonly BatchPlayCommand[] { return commands.map((entry) => PhotoshopBatchPlayCommand.parse(entry)); }
 

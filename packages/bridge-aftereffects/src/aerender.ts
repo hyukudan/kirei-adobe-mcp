@@ -25,6 +25,7 @@ export interface AerenderRequest {
   startFrame?: number;
   endFrame?: number;
   settingsTemplate?: string;
+  renderSettingsTemplate?: string;
   outputModuleTemplate?: string;
   operationId?: string;
   resourceLimits?: { maxCpuPercent?: number; maxMemoryMb?: number; maxRuntimeMs?: number };
@@ -134,7 +135,8 @@ export function buildAerenderArgs(request: AerenderRequest): string[] {
   if (request.outputPath !== undefined) args.push("-output", request.outputPath);
   if (request.startFrame !== undefined) args.push("-s", String(boundedNumber(request.startFrame, 0, 2_147_483_647, "startFrame")));
   if (request.endFrame !== undefined) args.push("-e", String(boundedNumber(request.endFrame, 0, 2_147_483_647, "endFrame")));
-  if (request.settingsTemplate !== undefined) args.push("-RStemplate", request.settingsTemplate);
+  const settingsTemplate = request.renderSettingsTemplate ?? request.settingsTemplate;
+  if (settingsTemplate !== undefined) args.push("-RStemplate", settingsTemplate);
   if (request.outputModuleTemplate !== undefined) args.push("-OMtemplate", request.outputModuleTemplate);
   return args;
 }

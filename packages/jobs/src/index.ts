@@ -1,5 +1,7 @@
 import { Job as JobSchema } from "@adobe-mcp/schemas";
 import type { Job } from "@adobe-mcp/schemas";
+import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
+import { dirname } from "node:path";
 
 const transitions: Record<Job["status"], readonly Job["status"][]> = {
   queued: ["running", "cancelled"],
@@ -30,6 +32,36 @@ export class JobStore {
   }
   serialize(): string { return JSON.stringify(this.list()); }
   static fromJSON(serialized: string): JobStore { const value: unknown = JSON.parse(serialized); if (!Array.isArray(value)) throw new Error("INVALID_ARGUMENT: invalid job store"); return new JobStore(value.map((job) => JobSchema.parse(job))); }
+}
+
+/** File-backed job journal. Writes are serialized and replaced atomically so a restart
+ * can recover queued/running jobs without exposing half-written JSON. */
+export class DurableJobStore {
+  readonly ready: Promise<void>;
+  private readonly store = new JobStore();
+  private writeChain: Promise<void> = Promise.resolve();
+  constructor(private readonly filePath: string) { this.ready = this.restore(); }
+  get(id: string): Job | undefined { return this.store.get(id); }
+  list(): Job[] { return this.store.list(); }
+  async create(job: Job): Promise<Job> { await this.ready; const value = this.store.create(job); await this.persist(); return value; }
+  async transition(id: string, status: Job["status"], patch: Partial<Job> = {}): Promise<Job> { await this.ready; const value = this.store.transition(id, status, patch); await this.persist(); return value; }
+  async flush(): Promise<void> { await this.ready; await this.persist(); }
+  private async restore(): Promise<void> { try { const raw = await readFile(this.filePath, "utf8"); const restored = JobStore.fromJSON(raw); for (const job of restored.list()) this.store.create(job); } catch (error) { const code = error instanceof Error && "code" in error ? String((error as NodeJS.ErrnoException).code) : ""; if (code !== "ENOENT") throw error; } }
+  private persist(): Promise<void> { const write = this.writeChain.then(async () => { await mkdir(dirname(this.filePath), { recursive: true }); const temporary = `${this.filePath}.tmp`; await writeFile(temporary, this.store.serialize(), { encoding: "utf8", mode: 0o600 }); await rename(temporary, this.filePath); }); this.writeChain = write.catch(() => undefined); return write; }
+}
+
+export interface JournalEntry { readonly id: string; readonly kind: "job" | "snapshot" | "saga" | "approval"; readonly event: string; readonly payload: Record<string, unknown>; readonly createdAt: string; }
+export class TransactionJournal {
+  constructor(private readonly filePath: string) {}
+  async append(entry: JournalEntry): Promise<void> { await mkdir(dirname(this.filePath), { recursive: true }); let current = ""; try { current = await readFile(this.filePath, "utf8"); } catch (error) { const code = error instanceof Error && "code" in error ? String((error as NodeJS.ErrnoException).code) : ""; if (code !== "ENOENT") throw error; } await writeFile(this.filePath, `${current}${JSON.stringify(entry)}\n`, { encoding: "utf8", mode: 0o600 }); }
+  async read(): Promise<JournalEntry[]> { try { const raw = await readFile(this.filePath, "utf8"); return raw.split(/\r?\n/).filter(Boolean).map((line) => JSON.parse(line) as JournalEntry); } catch (error) { const code = error instanceof Error && "code" in error ? String((error as NodeJS.ErrnoException).code) : ""; if (code === "ENOENT") return []; throw error; } }
+}
+
+export interface ProgressNotification { readonly progressToken: string | number; readonly progress: number; readonly total?: number; readonly message?: string; }
+export class ProgressBus {
+  private readonly listeners = new Set<(notification: ProgressNotification) => void>();
+  subscribe(listener: (notification: ProgressNotification) => void): () => void { this.listeners.add(listener); return () => this.listeners.delete(listener); }
+  publish(notification: ProgressNotification): void { const bounded = { ...notification, progress: Math.max(0, Math.min(notification.total ?? 1, notification.progress)) }; for (const listener of this.listeners) listener(bounded); }
 }
 
 export type OperationStatus = "in_progress" | "completed" | "failed";

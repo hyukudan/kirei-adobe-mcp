@@ -254,5 +254,6 @@ export class AfterEffectsBridge implements AdobeBridge {
 export { AfterEffectsBridge as AfterEffectsMockBridge };
 export function createAfterEffectsBridge(options: AfterEffectsBridgeOptions = {}): AfterEffectsBridge { return new AfterEffectsBridge(options); }
 export * from "./presets.js";
+export * from "./advanced.js";
 export { cloneProjectForAerender, renderFarm, segmentFrameRange, sha256File } from "./aerender.js";
 export type { RenderFarmResult, RenderFarmSegment } from "./aerender.js";

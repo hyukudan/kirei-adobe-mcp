@@ -32,6 +32,8 @@ import { BaseMockBridge, compareBase64Images, createMockDescriptor, decodeImageD
 import { inputHash } from "@adobe-mcp/bridge-core";
 import { expandEditPlan } from "./edit-plan.js";
 export { addCaptionTrack, addSequenceMarker, applyTimelineOperation, applyTransition, buildAutoDuckingKeyframes, calculateAutoReframeKeyframes, createEditPlan, detectSilenceRanges, executeEditPlan, expandEditPlan, moveClip, rippleDelete, setAudioKeyframes, splitClip, trimClip } from "./edit-plan.js";
+export { compileLumetriRecipe, compileMogrtParameters, compileProjectOrganization } from "./advanced.js";
+export type { MogrtManifestParameter, MogrtParameterWrite } from "./advanced.js";
 export type { AudioAnalysisSample, EditPlanExecutionResult, PremiereEditPlanTransport, TimeRange, TimelineClip, TimelineState } from "./edit-plan.js";
 
 export type PremiereRpcMethod =

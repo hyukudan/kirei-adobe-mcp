@@ -202,3 +202,5 @@ export const Sequence = PrSequenceState;
 export const ExportPreset = z.object({ id: OpaqueId, name: boundedText(512), app: AppId, format: boundedText(64), version: boundedText(64), supportsAlpha: z.boolean().optional() }).strict();
 export type AppId = z.infer<typeof AppId>; export type TargetRef = z.infer<typeof TargetRef>; export type MutationOptions = z.infer<typeof MutationOptions>; export type FileGrant = z.infer<typeof FileGrant>; export type ArtifactRef = z.infer<typeof ArtifactRef>; export type Snapshot = z.infer<typeof Snapshot>; export type NormalizedError = z.infer<typeof NormalizedError>; export type Job = z.infer<typeof Job>; export type OperationReceipt = z.infer<typeof OperationReceipt>; export type Plan = z.infer<typeof Plan>; export type ApprovalToken = z.infer<typeof ApprovalToken>; export type PreviewCaptureInput = z.infer<typeof PreviewCaptureInput>; export type PreviewCaptureData = z.infer<typeof PreviewCaptureData>; export type VisualVerifyInput = z.infer<typeof VisualVerifyInput>; export type VisualVerifyData = z.infer<typeof VisualVerifyData>;
 export { z };
+
+export * from "./advanced.js";

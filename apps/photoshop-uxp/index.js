@@ -94,6 +94,17 @@ function createAction(command) {
 }
 function actionFor(command, tempIdMap) {
   const resolve = (id) => tempIdMap[id] || id;
+  if (command.op === "advanced") {
+    const payload = command.payload || {}; const tool = String(command.tool || "");
+    if (tool === "adobe.photoshop.selection.smart") {
+      if (payload.mode === "selectSubject") return { _obj: "autoCutout", _target: [{ _ref: "document", _enum: "ordinal", _value: "targetEnum" }], sampleAllLayers: false };
+      if (payload.mode === "colorRange") return { _obj: "colorRange", fuzziness: payload.colorRange?.fuzziness ?? 40, color: payload.colorRange?.color, hue: payload.colorRange?.hue };
+      return { _obj: "selectObject", bounds: payload.boundingBox };
+    }
+    if (tool === "adobe.photoshop.layer.styles") return { _obj: "set", _target: [layerTarget(resolve(payload.layerId))], to: { _obj: "layer", layerEffects: { [payload.style]: { enabled: payload.enabled !== false, opacity: payload.opacity, angle: payload.angle, size: payload.size, spread: payload.spread, color: payload.color, gradient: payload.gradient } } } };
+    if (tool === "adobe.photoshop.channel.mask") return { _obj: "luminosityMask", source: payload.source, channelId: payload.channelId, layerId: payload.layerId, invert: payload.invert === true, featherPixels: payload.featherPixels || 0 };
+    throw new Error(`UNSUPPORTED_CAPABILITY: Photoshop advanced tool ${tool}`);
+  }
   if (command.op === "create") return createAction(command);
   if (command.op === "set") {
     const patch = command.patch || {}; const to = { _obj: "layer" };
