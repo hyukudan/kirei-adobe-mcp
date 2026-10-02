@@ -1,4 +1,4 @@
-# Adobe MCP (Model Context Protocol) Suite
+# kirei-adobe-mcp — Unified Adobe MCP Suite
 
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x%20Strict-blue.svg)](https://www.typescriptlang.org/)
 [![Turborepo](https://img.shields.io/badge/Turborepo-Monorepo-EF4444.svg)](https://turbo.build/)
@@ -202,8 +202,8 @@ The catalog exposes granular and high-level tools categorized by domain:
 
 ### 1. Build the Monorepo
 ```bash
-git clone https://github.com/your-org/adobe-mcp.git
-cd adobe-mcp
+git clone https://github.com/hyukudan/kirei-adobe-mcp.git
+cd kirei-adobe-mcp
 
 # Install dependencies
 pnpm install
