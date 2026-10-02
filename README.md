@@ -291,11 +291,11 @@ if (result.status === "rolled-back") {
 
 ## 🧠 Multi-Model Collaborative Engineering
 
-This repository was architected, implemented, mathematically verified, and audited through an advanced **multi-model agentic collaboration workflow**, combining the distinct reasoning, architectural, and coding capabilities of frontier AI models:
+This repository was architected, implemented, mathematically verified, and audited through an advanced **multi-model agentic collaboration workflow**, leveraging the combined reasoning, architectural, and formal verification strengths of frontier AI models from **Google DeepMind**, **Anthropic**, and **OpenAI**, alongside human pair programming:
 
-- **Google / DeepMind** (*Gemini & Antigravity Orchestration*): Primary agentic workflow coordinator, project lifecycle manager, and human-in-the-loop pair-programming copilot.
-- **Anthropic** (*Claude Opus & Claude 3.7 Sonnet*): Strategic architecture, creative domain design, cross-application saga synthesis, and comparative community ecosystem analysis.
-- **OpenAI** (*GPT-5.6 Sol & GPT-5.6 Luna High*): High-reasoning mathematical formal verification, strict TypeScript typing, deterministic Zod schema validation (Draft 2020-12), zero-tolerance security auditing, and forensic code certification.
+- **Google DeepMind**: Agentic workflow orchestration, project lifecycle management, and adaptive execution.
+- **Anthropic**: Strategic systems architecture, creative domain design, and cross-application saga synthesis.
+- **OpenAI**: Formal verification, strict TypeScript typing, deterministic schema validation, zero-tolerance security auditing, and forensic code certification.
 
 This multi-model synergy ensures both cutting-edge creative feature depth and bulletproof, enterprise-grade safety contracts.
 
