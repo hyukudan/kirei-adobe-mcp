@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "kirei-adobe": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "kirei-adobe-mcp"
+      ]
+    }
+  }
+}

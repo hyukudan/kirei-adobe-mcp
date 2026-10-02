@@ -213,9 +213,38 @@
         } catch (e) { if (request && request.method) reply(request.id, null, error(e.message || "HOST_ERROR")); }
     }
     function poll() { if (!socket || !socket.connected) return; var chunk = socket.read(8192); if (chunk) { readBuffer += chunk; if (readBuffer.length > MAX_FRAME_BYTES) throw new Error("RATE_LIMITED: frame exceeds configured limit"); var lines = readBuffer.split(/\r?\n/); readBuffer = lines.pop() || ""; for (var i = 0; i < lines.length; i++) if (lines[i]) receiveLine(lines[i]); } }
-    function connectTcp(options) { configure(options); if (!config.port || !config.token) throw new Error("INVALID_ARGUMENT: bridge port and token are required"); socket = new Socket(); if (!socket.open(config.host + ":" + config.port, "UTF-8")) throw new Error("BRIDGE_UNAVAILABLE: cannot open daemon socket"); clientNonce = nonce(32); return true; }
-    function connectWebSocket(url, options) { configure(options); if (typeof WebSocket === "undefined") throw new Error("UNSUPPORTED_CAPABILITY: WebSocket is not available in ExtendScript"); webSocket = new WebSocket(url); webSocket.onmessage = function (event) { receiveLine(event.data); }; return webSocket; }
-    function nonce(size) { var value = randomId("n") + randomId("n") + String(size); if (usedNonces[value]) return nonce(size); return value; }
+    function buildUI(thisObj) {
+        if (typeof Window === "undefined") return null;
+        var win = (thisObj instanceof Panel) ? thisObj : new Window("palette", "🌸 Kirei Adobe MCP", undefined, { resizeable: true });
+        win.orientation = "column"; win.alignChildren = ["fill", "top"]; win.spacing = 6; win.margins = 10;
+        var statusGroup = win.add("group"); statusGroup.orientation = "row";
+        statusGroup.add("statictext", undefined, "Status:");
+        var statusTxt = statusGroup.add("statictext", undefined, "Disconnected");
+        var portGroup = win.add("group"); portGroup.orientation = "row";
+        portGroup.add("statictext", undefined, "Port:");
+        var portInput = portGroup.add("edittext", undefined, "49152"); portInput.characters = 6;
+        var btnGroup = win.add("group"); btnGroup.orientation = "row";
+        var connectBtn = btnGroup.add("button", undefined, "Connect");
+        var pollTaskId = null;
+        connectBtn.onClick = function() {
+            try {
+                var port = parseInt(portInput.text, 10) || 49152;
+                connectTcp({ port: port, token: config.token || "auto" });
+                statusTxt.text = "Connected (Port " + port + ")";
+                if (typeof app !== "undefined" && app.scheduleTask && !pollTaskId) {
+                    pollTaskId = app.scheduleTask("AfterEffectsBridgePanel.poll()", 100, true);
+                }
+            } catch (err) {
+                statusTxt.text = "Error: " + err.message;
+            }
+        };
+        if (win instanceof Window) { win.center(); win.show(); }
+        return win;
+    }
 
-    global.AfterEffectsBridgePanel = { configure: configure, connect: connectTcp, connectWebSocket: connectWebSocket, poll: poll, receive: receiveLine, inspect: inspect, mutate: mutate, addToRenderQueue: addToRenderQueue, capabilities: CAPABILITIES, version: VERSION };
+    global.AfterEffectsBridgePanel = { configure: configure, connect: connectTcp, connectWebSocket: connectWebSocket, poll: poll, receive: receiveLine, inspect: inspect, mutate: mutate, addToRenderQueue: addToRenderQueue, capabilities: CAPABILITIES, version: VERSION, buildUI: buildUI };
+    if (typeof app !== "undefined" && typeof Window !== "undefined") {
+        try { buildUI(global); } catch (_) {}
+    }
 })(this);
+

@@ -231,23 +231,55 @@ async function handleMessage(raw) {
   }
 }
 async function readConfig() {
-  const folder = await localFileSystem.getDataFolder(); let config = {};
-  try { const file = await folder.getEntry("daemon.json"); config = JSON.parse(await file.read()); } catch { /* defaults are loopback-only */ }
-  try { const tokenFile = await folder.getEntry("session-token.json"); const token = JSON.parse(await tokenFile.read()); config.token = token.token || token; } catch { /* token may be injected by the installer */ }
+  let config = { endpoint: "ws://127.0.0.1:49152" };
+  try {
+    const folder = await localFileSystem.getDataFolder();
+    try { const file = await folder.getEntry("daemon.json"); config = Object.assign(config, JSON.parse(await file.read())); } catch {}
+    try { const tokenFile = await folder.getEntry("session-token.json"); const token = JSON.parse(await tokenFile.read()); config.token = token.token || token; } catch {}
+  } catch {}
+  if (typeof localStorage !== "undefined") {
+    const savedToken = localStorage.getItem("adobe_mcp_token");
+    const savedEndpoint = localStorage.getItem("adobe_mcp_endpoint");
+    if (savedToken) config.token = savedToken;
+    if (savedEndpoint) config.endpoint = savedEndpoint;
+  }
+  const tokenInput = $("token");
+  const endpointInput = $("endpoint");
+  if (tokenInput && tokenInput.value) config.token = tokenInput.value.trim();
+  if (endpointInput && endpointInput.value) config.endpoint = endpointInput.value.trim();
   if (!config.token && typeof window !== "undefined" && window.__ADOBE_MCP_TOKEN__) config.token = window.__ADOBE_MCP_TOKEN__;
   if (!config.endpoint && typeof window !== "undefined" && window.__ADOBE_MCP_DAEMON_ENDPOINT__) config.endpoint = window.__ADOBE_MCP_DAEMON_ENDPOINT__;
-  if (!config.endpoint || !config.token) throw new Error("UNAUTHENTICATED: daemon.json and session-token.json are required");
   return config;
 }
 function scheduleReconnect() { if (state.reconnectTimer) return; const delay = Math.min(30_000, 500 * (2 ** state.reconnectAttempt)) + Math.floor(Math.random() * 300); state.reconnectAttempt++; state.reconnectTimer = setTimeout(() => { state.reconnectTimer = null; connect().catch(showError); }, delay); }
 async function connect() {
   if (state.socket && state.connected) return;
-  const config = await readConfig(); state.endpoint = config.endpoint; state.token = config.token; setStatus("Connecting…");
+  const config = await readConfig(); state.endpoint = config.endpoint || "ws://127.0.0.1:49152"; state.token = config.token; setStatus("Connecting…");
   const socket = new WebSocket(state.endpoint); state.socket = socket;
   socket.onopen = () => { state.connected = true; state.reconnectAttempt = 0; state.lastSeen = Date.now(); setStatus("Connected", true); if (state.heartbeat) clearInterval(state.heartbeat); state.heartbeat = setInterval(() => { if (Date.now() - state.lastSeen > 45_000) { socket.close(); return; } try { send({ type: "ping", timestamp: new Date().toISOString() }); } catch { socket.close(); } }, 10_000); };
   socket.onmessage = (event) => { handleMessage(event).catch(showError); };
   socket.onerror = () => { setStatus("Connection error"); };
   socket.onclose = () => { state.connected = false; if (state.heartbeat) clearInterval(state.heartbeat); state.heartbeat = null; setStatus("Disconnected"); scheduleReconnect(); };
 }
-$("reconnect").addEventListener("click", () => { if (state.socket) state.socket.close(); connect().catch(showError); });
+const saveBtn = $("saveConnect");
+if (saveBtn) {
+  saveBtn.addEventListener("click", () => {
+    const token = $("token")?.value?.trim();
+    const endpoint = $("endpoint")?.value?.trim();
+    if (typeof localStorage !== "undefined") {
+      if (token) localStorage.setItem("adobe_mcp_token", token);
+      if (endpoint) localStorage.setItem("adobe_mcp_endpoint", endpoint);
+    }
+    if (state.socket) state.socket.close();
+    connect().catch(showError);
+  });
+}
+const reconnectBtn = $("reconnect");
+if (reconnectBtn) {
+  reconnectBtn.addEventListener("click", () => {
+    if (state.socket) state.socket.close();
+    connect().catch(showError);
+  });
+}
 connect().catch((error) => { showError(error); setStatus("Waiting for daemon"); scheduleReconnect(); });
+

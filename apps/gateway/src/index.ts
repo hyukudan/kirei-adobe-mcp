@@ -3,7 +3,7 @@ import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { randomUUID } from "node:crypto";
 import WebSocket from "ws";
-import { JsonRpcRequest, makeRpcError, computeAuthProof, localTokenPath, ProtocolVersion, readLocalToken } from "@adobe-mcp/protocol";
+import { JsonRpcRequest, makeRpcError, computeAuthProof, localTokenPath, ProtocolVersion, readLocalToken, loadOrCreateLocalToken } from "@adobe-mcp/protocol";
 import type { JsonRpcResponse } from "@adobe-mcp/protocol";
 import type { NormalizedError } from "@adobe-mcp/schemas";
 import { discoverTools, getTool, riskForInput, INTERNAL_TOOL_CATALOG, PUBLIC_TOOL_CATALOG, TOOL_CATALOG, validateToolInput, validateToolOutput } from "@adobe-mcp/tool-catalog";
@@ -112,4 +112,22 @@ export class GatewayServer {
   private error(id: JsonRpcResponse["id"], code: NormalizedError["code"], message: string, requestId: string): JsonRpcResponse { const normalized: NormalizedError = { code, message, requestId: requestId.slice(0, 256), retryable: ["TIMEOUT", "RATE_LIMITED", "BRIDGE_UNAVAILABLE"].includes(code), details: {}, appliedOperationIds: [] }; return makeRpcError(id, normalized); }
 }
 export { DEFAULT_POLICY };
-if (import.meta.url === `file://${process.argv[1]}`) { const daemon = new WebSocketDaemonClient(readLocalToken(localTokenPath())); const policyPath = join(process.cwd(), "adobe-mcp.policy.json"); const policy = existsSync(policyPath) ? loadPolicy(policyPath) : DEFAULT_POLICY; await new GatewayServer(daemon, 30_000, policy, process.env.ADOBE_MCP_APPROVAL_SECRET).serveStdio(); }
+export async function startGateway(options?: { port?: number; approvalSecret?: string }): Promise<void> {
+  const token = loadOrCreateLocalToken();
+  let client = new WebSocketDaemonClient(token, `ws://127.0.0.1:${options?.port ?? Number(process.env.ADOBE_MCP_DAEMON_PORT ?? 49152)}`);
+  try {
+    await (client as unknown as { connect(): Promise<void> }).connect();
+  } catch {
+    // Daemon not running yet, auto-bootstrap in-process daemon
+    const { LocalBridgeDaemon } = await import("@adobe-mcp/daemon");
+    const embeddedDaemon = new LocalBridgeDaemon(token);
+    await embeddedDaemon.start(options?.port ?? Number(process.env.ADOBE_MCP_DAEMON_PORT ?? 49152));
+    client = new WebSocketDaemonClient(token, embeddedDaemon.endpoint);
+  }
+  const policyPath = join(process.cwd(), "adobe-mcp.policy.json");
+  const policy = existsSync(policyPath) ? loadPolicy(policyPath) : DEFAULT_POLICY;
+  await new GatewayServer(client, 30_000, policy, options?.approvalSecret ?? process.env.ADOBE_MCP_APPROVAL_SECRET).serveStdio();
+}
+if (import.meta.url === `file://${process.argv[1]}`) {
+  await startGateway();
+}

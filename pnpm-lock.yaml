@@ -74,6 +74,9 @@ importers:
 
   apps/gateway:
     dependencies:
+      '@adobe-mcp/daemon':
+        specifier: workspace:*
+        version: link:../daemon
       '@adobe-mcp/policy':
         specifier: workspace:*
         version: link:../../packages/policy
