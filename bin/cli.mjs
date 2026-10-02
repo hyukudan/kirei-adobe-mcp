@@ -96,7 +96,7 @@ function printBanner() {
 
 async function runDoctor() {
   printBanner();
-  info("Ejecutando diagnóstico del sistema (kirei doctor)...\n");
+  info("Running system diagnostics (kirei doctor)...\n");
 
   // 1. Node.js version
   const nodeVer = process.version;
@@ -104,16 +104,16 @@ async function runDoctor() {
   if (major >= 20) {
     success(`Node.js runtime: ${nodeVer} (Compatible)`);
   } else {
-    warn(`Node.js runtime: ${nodeVer} (Se recomienda Node 20+)`);
+    warn(`Node.js runtime: ${nodeVer} (Node 20+ recommended)`);
   }
 
   // 2. Token & Security
   try {
     const token = loadOrCreateLocalToken();
     const tokenFile = localTokenPath();
-    success(`Auth Token (HMAC-SHA256): ${tokenFile} (Activo, ${token.length} chars)`);
+    success(`Auth Token (HMAC-SHA256): ${tokenFile} (Active, ${token.length} chars)`);
   } catch (err) {
-    error(`Error cargando Auth Token: ${err.message}`);
+    error(`Error loading Auth Token: ${err.message}`);
   }
 
   // 3. Port check
@@ -122,41 +122,41 @@ async function runDoctor() {
 
   // 4. Adobe CC Applications
   const apps = getAppPaths();
-  log("\n\x1b[1mAplicaciones Adobe detectadas:\x1b[0m");
+  log("\n\x1b[1mDetected Adobe CC Applications:\x1b[0m");
   if (apps.photoshop.length > 0) success(`Photoshop: ${apps.photoshop.join(", ")}`);
-  else warn("Photoshop: No detectado en rutas estándar");
+  else warn("Photoshop: Not detected in standard directories");
 
   if (apps.premiere.length > 0) success(`Premiere Pro: ${apps.premiere.join(", ")}`);
-  else warn("Premiere Pro: No detectado en rutas estándar");
+  else warn("Premiere Pro: Not detected in standard directories");
 
   if (apps.afterEffects.length > 0) success(`After Effects: ${apps.afterEffects.join(", ")}`);
-  else warn("After Effects: No detectado en rutas estándar");
+  else warn("After Effects: Not detected in standard directories");
 
   if (apps.illustrator.length > 0) success(`Illustrator: ${apps.illustrator.join(", ")}`);
-  else warn("Illustrator: No detectado en rutas estándar");
+  else warn("Illustrator: Not detected in standard directories");
 
   // 5. CEP Extension Folder & Debug Mode
-  log("\n\x1b[1mEntorno de Extensiones (CEP & UXP):\x1b[0m");
+  log("\n\x1b[1mExtension Environment (CEP & UXP):\x1b[0m");
   if (existsSync(apps.cepExtensionDir)) {
-    success(`Directorio CEP: ${apps.cepExtensionDir}`);
+    success(`CEP Directory: ${apps.cepExtensionDir}`);
   } else {
-    info(`Directorio CEP no existe aún (se creará al instalar plugins): ${apps.cepExtensionDir}`);
+    info(`CEP Directory does not exist yet (will be created on plugin install): ${apps.cepExtensionDir}`);
   }
 
   if (platform() === "win32") {
     try {
       const regOut = execSync('reg query "HKCU\\Software\\Adobe\\CSXS.11" /v PlayerDebugMode', { stdio: ["pipe", "pipe", "ignore"] }).toString();
       if (regOut.includes("0x1") || regOut.includes("1")) {
-        success("CSXS PlayerDebugMode: Habilitado (1)");
+        success("CSXS PlayerDebugMode: Enabled (1)");
       } else {
-        warn("CSXS PlayerDebugMode: Deshabilitado. Ejecuta `kirei-adobe-mcp install-plugins` para habilitarlo.");
+        warn("CSXS PlayerDebugMode: Disabled. Run `kirei-adobe-mcp install-plugins` to enable it.");
       }
     } catch {
-      warn("CSXS PlayerDebugMode: No configurado. Ejecuta `kirei-adobe-mcp install-plugins` para configurarlo automáticamente.");
+      warn("CSXS PlayerDebugMode: Not configured. Run `kirei-adobe-mcp install-plugins` to configure it automatically.");
     }
   }
 
-  log("\n\x1b[32mDiagnóstico completado con éxito.\x1b[0m\n");
+  log("\n\x1b[32mDiagnostics completed successfully.\x1b[0m\n");
 }
 
 function getMcpConfigJson() {
@@ -172,10 +172,10 @@ function getMcpConfigJson() {
 
 async function runSetup() {
   printBanner();
-  info("Configuración guiada para Clientes MCP (Claude Desktop, Cursor, Antigravity, Cline, Windsurf)\n");
+  info("Guided Setup for MCP Clients (Claude Desktop, Cursor, Antigravity, Cline, Windsurf)\n");
 
   const snippet = JSON.stringify(getMcpConfigJson(), null, 2);
-  log("\x1b[1mSnippet de configuración MCP para copiar y pegar:\x1b[0m");
+  log("\x1b[1mMCP Configuration Snippet:\x1b[0m");
   log(`\x1b[33m${snippet}\x1b[0m\n`);
 
   const apps = getAppPaths();
@@ -192,10 +192,10 @@ async function runSetup() {
       config.mcpServers = config.mcpServers || {};
       config.mcpServers["kirei-adobe"] = getMcpConfigJson().mcpServers["kirei-adobe"];
       writeFileSync(apps.claudeConfig, JSON.stringify(config, null, 2), "utf-8");
-      success(`Configurado automáticamente en Claude Desktop: ${apps.claudeConfig}`);
+      success(`Automatically configured Claude Desktop: ${apps.claudeConfig}`);
       configuredCount++;
     } catch (e) {
-      warn(`No se pudo escribir en Claude Desktop config: ${e.message}`);
+      warn(`Could not write to Claude Desktop config: ${e.message}`);
     }
   }
 
@@ -210,16 +210,16 @@ async function runSetup() {
     config.mcpServers = config.mcpServers || {};
     config.mcpServers["kirei-adobe"] = getMcpConfigJson().mcpServers["kirei-adobe"];
     writeFileSync(apps.cursorConfig, JSON.stringify(config, null, 2), "utf-8");
-    success(`Configurado en workspace de Cursor: ${apps.cursorConfig}`);
+    success(`Configured Cursor workspace: ${apps.cursorConfig}`);
     configuredCount++;
   } catch {}
 
-  info(`\n${configuredCount > 0 ? "Archivos de configuración actualizados." : "Copia el snippet superior en tu cliente MCP favorito."}\n`);
+  info(`\n${configuredCount > 0 ? "Configuration files updated." : "Copy the snippet above into your preferred MCP client."}\n`);
 }
 
 async function runInstallPlugins() {
   printBanner();
-  info("Instalando extensiones y scripts en directorios de Adobe Creative Cloud...\n");
+  info("Installing extensions and scripts into Adobe Creative Cloud directories...\n");
 
   const apps = getAppPaths();
 
@@ -230,9 +230,9 @@ async function runInstallPlugins() {
     try {
       if (!existsSync(apps.cepExtensionDir)) mkdirSync(apps.cepExtensionDir, { recursive: true });
       cpSync(cepSrc, cepDest, { recursive: true });
-      success(`Extensión Premiere CEP instalada en: ${cepDest}`);
+      success(`Premiere CEP extension installed to: ${cepDest}`);
     } catch (e) {
-      warn(`No se pudo copiar extensión CEP: ${e.message}`);
+      warn(`Could not copy CEP extension: ${e.message}`);
     }
   }
 
@@ -242,18 +242,18 @@ async function runInstallPlugins() {
       execSync('reg add "HKCU\\Software\\Adobe\\CSXS.10" /v PlayerDebugMode /t REG_SZ /d 1 /f', { stdio: "ignore" });
       execSync('reg add "HKCU\\Software\\Adobe\\CSXS.11" /v PlayerDebugMode /t REG_SZ /d 1 /f', { stdio: "ignore" });
       execSync('reg add "HKCU\\Software\\Adobe\\CSXS.12" /v PlayerDebugMode /t REG_SZ /d 1 /f', { stdio: "ignore" });
-      success("Habilitado PlayerDebugMode (CSXS 10, 11, 12) en el Registro de Windows.");
+      success("Enabled PlayerDebugMode (CSXS 10, 11, 12) in Windows Registry.");
     } catch (e) {
-      warn(`No se pudo establecer PlayerDebugMode: ${e.message}`);
+      warn(`Could not set PlayerDebugMode: ${e.message}`);
     }
   } else if (platform() === "darwin") {
     try {
       execSync("defaults write com.adobe.CSXS.10 PlayerDebugMode 1", { stdio: "ignore" });
       execSync("defaults write com.adobe.CSXS.11 PlayerDebugMode 1", { stdio: "ignore" });
       execSync("defaults write com.adobe.CSXS.12 PlayerDebugMode 1", { stdio: "ignore" });
-      success("Habilitado PlayerDebugMode (CSXS 10, 11, 12) en macOS defaults.");
+      success("Enabled PlayerDebugMode (CSXS 10, 11, 12) in macOS defaults.");
     } catch (e) {
-      warn(`No se pudo establecer PlayerDebugMode: ${e.message}`);
+      warn(`Could not set PlayerDebugMode: ${e.message}`);
     }
   }
 
@@ -267,7 +267,7 @@ async function runInstallPlugins() {
       if (targetDir) {
         try {
           copyFileSync(aeScriptSrc, join(targetDir, "AfterEffectsBridge.jsx"));
-          success(`ScriptUI de After Effects copiado en: ${join(targetDir, "AfterEffectsBridge.jsx")}`);
+          success(`After Effects ScriptUI copied to: ${join(targetDir, "AfterEffectsBridge.jsx")}`);
         } catch {}
       }
     }
@@ -283,26 +283,26 @@ async function runInstallPlugins() {
       if (targetDir) {
         try {
           copyFileSync(aiScriptSrc, join(targetDir, "illustrator-bridge-1.0.0.jsx"));
-          success(`Script JSX de Illustrator copiado en: ${join(targetDir, "illustrator-bridge-1.0.0.jsx")}`);
+          success(`Illustrator JSX script copied to: ${join(targetDir, "illustrator-bridge-1.0.0.jsx")}`);
         } catch {}
       }
     }
   }
 
-  log("\n\x1b[32mInstalación de plugins completada.\x1b[0m\n");
+  log("\n\x1b[32mPlugin installation completed.\x1b[0m\n");
 }
 
 function printHelp() {
   printBanner();
-  log(`Uso:
-  npx kirei-adobe-mcp [comando]
+  log(`Usage:
+  npx kirei-adobe-mcp [command]
 
-Comandos disponibles:
-  stdio (por defecto)   Inicia el servidor MCP por STDIO (con auto-spawn del daemon si es necesario).
-  doctor                Verifica el estado del sistema, aplicaciones Adobe y puertos.
-  setup                 Genera e inyecta la configuración MCP en Claude Desktop, Cursor, etc.
-  install-plugins       Instala extensiones CEP/JSX y configura PlayerDebugMode.
-  help, --help, -h      Muestra esta ayuda.
+Available Commands:
+  stdio (default)       Start the MCP server over STDIO (auto-spawning daemon if needed).
+  doctor                Check system status, installed Adobe applications, and ports.
+  setup                 Generate and inject MCP configuration into Claude Desktop, Cursor, etc.
+  install-plugins       Install CEP/JSX extensions and configure PlayerDebugMode.
+  help, --help, -h      Show this help message.
 `);
 }
 
@@ -331,6 +331,6 @@ async function main() {
 }
 
 main().catch((err) => {
-  error(`Error fatal: ${err.message}`);
+  error(`Fatal error: ${err.message}`);
   process.exit(1);
 });

@@ -9,30 +9,30 @@ echo.
 
 where node >nul 2>nul
 if %ERRORLEVEL% neq 0 (
-    echo [ERROR] Node.js no está instalado o no se encuentra en el PATH.
-    echo Por favor descarga e instala Node.js 20 o superior desde:
+    echo [ERROR] Node.js is not installed or not in system PATH.
+    echo Please download and install Node.js 20 or higher from:
     echo https://nodejs.org/
     echo.
     pause
     exit /b 1
 )
 
-echo [1/3] Configurando clientes MCP (Claude Desktop, Cursor, Antigravity)...
+echo [1/3] Configuring MCP clients (Claude Desktop, Cursor, Antigravity)...
 node bin\cli.mjs setup
 
 echo.
-echo [2/3] Instalando extensiones Adobe CC y configurando PlayerDebugMode...
+echo [2/3] Installing Adobe CC extensions and enabling PlayerDebugMode...
 node bin\cli.mjs install-plugins
 
 echo.
-echo [3/3] Ejecutando verificación y diagnóstico general...
+echo [3/3] Running verification and diagnostic health check...
 node bin\cli.mjs doctor
 
 echo ===============================================================
-echo   ✔ ¡Instalación y configuración completadas con éxito!
+echo   ✔ Installation and configuration completed successfully!
 echo.
-echo   Ya puedes abrir tu cliente MCP (Claude Desktop, Cursor, etc.)
-echo   y tus aplicaciones Adobe (Photoshop, Premiere, AE, Illustrator).
+echo   You can now launch your MCP client (Claude Desktop, Cursor, etc.)
+echo   and your Adobe apps (Photoshop, Premiere, AE, Illustrator).
 echo ===============================================================
 echo.
 pause

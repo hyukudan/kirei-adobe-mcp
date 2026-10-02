@@ -23,10 +23,10 @@ const AFTER_EFFECTS_PRESET_RESOURCES = [
 function listAfterEffectsPresetResources(): readonly { uri: string; name: string; mimeType: "application/json" }[] { return AFTER_EFFECTS_PRESET_RESOURCES.map((entry) => ({ uri: `adobe://aftereffects/presets/${entry.id}`, name: entry.name, mimeType: "application/json" })); }
 function readAfterEffectsPresetResource(uri: string): string { const match = /^adobe:\/\/aftereffects\/presets\/([^/]+)$/.exec(uri); const entry = AFTER_EFFECTS_PRESET_RESOURCES.find((candidate) => candidate.id === match?.[1]); if (!entry) throw new Error("NOT_FOUND: After Effects preset resource"); return JSON.stringify(entry); }
 const PROMPTS = [
-  { name: "reframe-tiktok", description: "Convierte una secuencia 16:9 a 9:16 con seguimiento y verificación.", arguments: [{ name: "sequenceId", required: true }, { name: "target", required: false }] },
-  { name: "podcast-cleanup", description: "Detecta silencios, aplica auto-ducking y ecualización declarativa.", arguments: [{ name: "sequenceId", required: true }, { name: "voiceTrackIndices", required: true }] },
-  { name: "motion-graphic-bumper", description: "Compone un bumper de After Effects con textos animados y cámara 3D.", arguments: [{ name: "compId", required: true }, { name: "title", required: true }] },
-  { name: "brand-vectorize", description: "Vectoriza un logotipo y extrae una paleta de color global.", arguments: [{ name: "imageArtifactUri", required: true }, { name: "preset", required: false }] }
+  { name: "reframe-tiktok", description: "Convert a 16:9 sequence to 9:16 vertical video with tracking and visual verification.", arguments: [{ name: "sequenceId", required: true }, { name: "target", required: false }] },
+  { name: "podcast-cleanup", description: "Detect silences, apply auto-ducking, and execute declarative equalization.", arguments: [{ name: "sequenceId", required: true }, { name: "voiceTrackIndices", required: true }] },
+  { name: "motion-graphic-bumper", description: "Compose an After Effects motion bumper with animated typography and 3D camera.", arguments: [{ name: "compId", required: true }, { name: "title", required: true }] },
+  { name: "brand-vectorize", description: "Vectorize a brand logo image and extract a global swatch palette.", arguments: [{ name: "imageArtifactUri", required: true }, { name: "preset", required: false }] }
 ] as const;
 function dynamicResources(): readonly { uri: string; name: string; mimeType: "application/json" }[] {
   return [

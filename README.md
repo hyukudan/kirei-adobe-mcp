@@ -8,7 +8,7 @@
 
 The definitive, unified, strictly-typed Model Context Protocol (MCP) server for **Adobe Photoshop, Premiere Pro, After Effects, and Illustrator**.
 
-Designed for enterprise AI assistants (**Claude Desktop, Cursor, Antigravity, Cline, Windsurf**), `kirei-adobe-mcp` replaces brittle scripts with 62 deterministic tools, Zod contracts, cryptographic risk tiers (R0–R4), Content-Addressed Storage (CAS), and visual verification.
+Designed for enterprise AI assistants (**Claude Desktop, Cursor, Antigravity, Cline, Windsurf**), `kirei-adobe-mcp` replaces brittle scripts with 62 deterministic tools, strict Zod contracts, cryptographic risk classification (R0–R4), Content-Addressed Storage (CAS), and visual verification.
 
 ---
 
@@ -24,14 +24,14 @@ Designed for enterprise AI assistants (**Claude Desktop, Cursor, Antigravity, Cl
 
 ---
 
-## ⚡ Quickstart en 60 Segundos (Zero-Config)
+## ⚡ Quickstart in 60 Seconds (Zero-Config)
 
-No necesitas clonar el repositorio ni compilar código manualmente. Puedes usar `kirei-adobe-mcp` directamente con `npx`:
+You do not need to clone the repository or manually build the project. You can run `kirei-adobe-mcp` directly with `npx`:
 
-### 1. Añadir a tu Cliente MCP Favorito
+### 1. Add to Your Favorite MCP Client
 
 #### 🤖 Claude Desktop
-Añade a tu archivo de configuración (`%APPDATA%\Claude\claude_desktop_config.json` en Windows o `~/Library/Application Support/Claude/claude_desktop_config.json` en macOS):
+Add this entry to your configuration file (`%APPDATA%\Claude\claude_desktop_config.json` on Windows or `~/Library/Application Support/Claude/claude_desktop_config.json` on macOS):
 
 ```json
 {
@@ -45,7 +45,7 @@ Añade a tu archivo de configuración (`%APPDATA%\Claude\claude_desktop_config.j
 ```
 
 #### 💻 Cursor
-Crea o edita `.cursor/mcp.json` en tu workspace o en la configuración global de Cursor:
+Create or edit `.cursor/mcp.json` in your workspace or global Cursor settings:
 
 ```json
 {
@@ -59,7 +59,7 @@ Crea o edita `.cursor/mcp.json` en tu workspace o en la configuración global de
 ```
 
 #### 🚀 Antigravity / Gemini CLI
-Añade a `~/.gemini/antigravity-cli/mcp.json`:
+Add to `~/.gemini/antigravity-cli/mcp.json`:
 
 ```json
 {
@@ -73,7 +73,7 @@ Añade a `~/.gemini/antigravity-cli/mcp.json`:
 ```
 
 #### 🌊 Windsurf / Cascade
-Añade a `~/.codeium/windsurf/mcp_config.json`:
+Add to `~/.codeium/windsurf/mcp_config.json`:
 
 ```json
 {
@@ -87,7 +87,7 @@ Añade a `~/.codeium/windsurf/mcp_config.json`:
 ```
 
 #### 🛠️ Cline / Roo Code (VS Code Extension)
-Añade a tu configuración de servidores MCP en Cline:
+Add to your Cline MCP settings:
 
 ```json
 {
@@ -104,97 +104,101 @@ Añade a tu configuración de servidores MCP en Cline:
 
 ---
 
-## 🧙‍♂️ Asistente de Instalación y Diagnóstico CLI
+## 🧙‍♂️ 1-Click Installation & Diagnostic CLI Wizard
 
-`kirei-adobe-mcp` incluye herramientas interactivas integradas para facilitar la configuración en un solo paso:
+`kirei-adobe-mcp` includes interactive built-in tools for seamless configuration:
 
 ```powershell
-# 1. Diagnóstico completo del sistema y aplicaciones Adobe instaladas
+# 1. Full diagnostic of system environment and detected Adobe CC applications
 npx kirei-adobe-mcp doctor
 
-# 2. Configurar automáticamente clientes MCP (Claude Desktop, Cursor, etc.)
+# 2. Automatically configure detected MCP clients (Claude Desktop, Cursor, etc.)
 npx kirei-adobe-mcp setup
 
-# 3. Instalar extensiones y scripts en las carpetas oficiales de Adobe
+# 3. Automatically copy extension panels/scripts to official Adobe folders
 npx kirei-adobe-mcp install-plugins
 ```
 
-### Scripts de 1-Click Automatizados
+### Automated 1-Click Launchers
 
-- **Windows (PowerShell):**
+- **Windows (Double-click or PowerShell):**
   ```powershell
+  .\install.bat
+  # or
   powershell -ExecutionPolicy Bypass -File scripts/setup-windows.ps1
   ```
-- **macOS (Terminal):**
+- **macOS / Linux (Terminal):**
   ```bash
+  bash install.sh
+  # or
   bash scripts/setup-macos.sh
   ```
 
 ---
 
-## 🏗️ Arquitectura del Sistema
+## 🏗️ System Architecture
 
 ```mermaid
 flowchart TD
-  Client["Cliente MCP<br/>Claude · Cursor · Antigravity · Cline · Windsurf"] -->|"STDIO Gateway (JSON-RPC)"| Gateway["Gateway Server (MCP 2026)"]
-  Gateway -.->|"Auto-bootstrap si inactivo"| Daemon
+  Client["MCP Client<br/>Claude · Cursor · Antigravity · Cline · Windsurf"] -->|"STDIO Gateway (JSON-RPC)"| Gateway["Gateway Server (MCP 2026)"]
+  Gateway -.->|"Auto-bootstrap if inactive"| Daemon
   Gateway -->|"HMAC-SHA256 Loopback RPC"| Daemon["Loopback Bridge Daemon<br/>127.0.0.1:49152"]
   
-  Daemon <--> PS["Photoshop<br/>(UXP Panel Modal)"]
+  Daemon <--> PS["Photoshop<br/>(UXP Modal Panel)"]
   Daemon <--> PR["Premiere Pro<br/>(UXP / CEP Timeline Bridge)"]
   Daemon <--> AE["After Effects<br/>(ScriptUI / aerender CLI)"]
   Daemon <--> AI["Illustrator<br/>(JSX Engine / Pathfinder)"]
   
   Daemon --> CAS[("Artifact Store (CAS)<br/>artifact://sha256-...")]
-  Daemon --> Sagas["Workflow Saga Engine<br/>Compensación & Rollback"]
+  Daemon --> Sagas["Workflow Saga Engine<br/>Compensation & Rollback"]
 ```
 
 ---
 
-## 🎯 El Patrón Front-Door (Ahorro >80% de Tokens)
+## 🎯 The Front-Door Pattern (>80% Token Savings)
 
-En lugar de sobrecargar la ventana de contexto de la IA exponiendo 62 herramientas atómicas a la vez, `kirei-adobe-mcp` implementa el patrón Front-Door de descubrimiento progresivo:
+Instead of overloading the AI context window by publishing 62 individual tools simultaneously, `kirei-adobe-mcp` implements progressive discovery:
 
-1. `adobe.tools.discover`: Busca en el registro interno de operaciones por aplicación, categoría o riesgo.
-2. `adobe.tools.describe`: Obtiene el esquema JSON Zod completo únicamente para las operaciones necesarias.
-3. `adobe.operations.plan`: Compila y valida un plan inmutable con cálculo de riesgo y `planHash`.
-4. `adobe.operations.execute`: Ejecuta las operaciones aprobadas de manera idempotente con recibo de confirmación.
+1. `adobe.tools.discover`: Query the internal operation registry by application, category, or risk.
+2. `adobe.tools.describe`: Retrieve the exact JSON/Zod schemas only for required operations.
+3. `adobe.operations.plan`: Compile and validate an immutable plan with risk estimation and `planHash`.
+4. `adobe.operations.execute`: Execute approved operations idempotently with verifiable receipts.
 
 ---
 
-## 🎨 Cobertura por Aplicación
+## 🎨 Application Coverage
 
-| Aplicación | Capacidades Principales | Workflows Avanzados |
+| Application | Core Surface | Advanced Workflows |
 |---|---|---|
-| **Photoshop** | Capas, selecciones, máscaras, ajustes, objetos inteligentes, recorte | *Select Subject*, *Color Range*, *Layer Styles*, máscaras de luminosidad, exportación real de capas, Firefly *Generative Fill* (R3). |
-| **Premiere Pro** | Inserción/corte/desplazamiento en Timeline, pistas, clips, subtítulos | Parametrización de plantillas MOGRT con manifest, graduación de color Lumetri declarativa, gestión de proxies, auto-ducking y reframe 9:16. |
-| **After Effects** | Composiciones, capas, keyframes tipados, presets de efectos | Operadores de forma (*Trim Paths*, *Repeater*, *Wiggle*), animadores de texto con selectores de rango, controles de expresión y render headless vía `aerender`. |
-| **Illustrator** | Trazados, arte vectorial, tipografía, exportación multi-mesa | Vectorización *Image Trace*, gestión de paletas y muestras globales, tipografía variable OpenType y operaciones booleanas de *Pathfinder*. |
+| **Photoshop** | Layers, selections, masks, adjustments, Smart Objects, cropping | *Select Subject*, *Color Range*, *Layer Styles*, luminosity masks, artifact layer export, Firefly *Generative Fill* (R3). |
+| **Premiere Pro** | Timeline insert/cut/trim/slip, tracks, clips, captions | MOGRT template parameter binding with manifests, declarative Lumetri Color grading, proxy management, auto-ducking, and 9:16 auto-reframe. |
+| **After Effects** | Compositions, layers, typed keyframes, effect presets | Shape operators (*Trim Paths*, *Repeater*, *Wiggle*), text animators with range selectors, expression controls, and headless `aerender`. |
+| **Illustrator** | Paths, vector art, typography, multi-artboard export | Vectorization via *Image Trace*, global swatches & palette management, variable OpenType typography, and boolean *Pathfinder* operations. |
 
 ---
 
-## 🛡️ Modelo de Seguridad y Riesgos (R0–R4)
+## 🛡️ Security & Risk Model (R0–R4)
 
-| Nivel de Riesgo | Clasificación | Requisitos de Aprobación | Ejemplos |
+| Risk Tier | Classification | Approval Requirements | Examples |
 |:---:|---|---|---|
-| **R0** | Lectura e Inspección | Acceso libre automático | Inspeccionar jerarquía de capas, leer timeline, previsualizaciones. |
-| **R1** | Mutación No Destructiva | Verificación local | Añadir capas vacías, crear máscaras, aplicar keyframes. |
-| **R2** | Mutación Moderada | Plan Hash + Snapshot | Modificar cortes existentes, cambiar orden de capas, aplicar estilos. |
-| **R3** | Mutación Mayor / Generativa | Aprobación Criptográfica Explícita | Firefly Generative Fill, reestructuración profunda de timeline, render queue. |
-| **R4** | Destructiva / Irreversible | Aprobación Crítica con Token Único | Sobrescribir archivos originales, eliminación masiva de recursos. |
+| **R0** | Read & Inspection | Automatic / unrestricted | Inspecting layer trees, reading timeline DOM, capturing previews. |
+| **R1** | Non-Destructive Mutation | Local validation | Adding empty layers, creating masks, applying keyframes. |
+| **R2** | Moderate Mutation | Plan Hash + Snapshot | Modifying existing cuts, reordering layers, applying styles. |
+| **R3** | Major / Generative Mutation | Explicit Cryptographic Approval | Firefly Generative Fill, deep timeline restructuring, render queue. |
+| **R4** | Destructive / Irreversible | Critical Token Approval | Overwriting source assets, mass asset deletion. |
 
 ---
 
-## 🔧 Resolución de Problemas (Troubleshooting & FAQ)
+## 🔧 Troubleshooting & FAQ
 
-### ❓ El cliente MCP muestra `BRIDGE_UNAVAILABLE: panel disconnected`
-* **Solución:** Abre la aplicación Adobe correspondiente (Photoshop, Premiere, etc.) y asegúrate de que el panel o script de extensión esté cargado y muestre el estado en verde (**Connected**).
+### ❓ MCP client reports `BRIDGE_UNAVAILABLE: panel disconnected`
+* **Resolution:** Open the corresponding Adobe application (Photoshop, Premiere, etc.) and ensure the extension panel or script is loaded and showing green status (**Connected**).
 
-### ❓ Error de firma en Premiere CEP (`PlayerDebugMode`)
-* **Solución:** Ejecuta `npx kirei-adobe-mcp install-plugins` para habilitar automáticamente el modo de depuración de CSXS en el Registro de Windows o defaults de macOS.
+### ❓ Extension signature error in Premiere CEP (`PlayerDebugMode`)
+* **Resolution:** Run `npx kirei-adobe-mcp install-plugins` (or `install.bat`) to automatically configure CSXS debug mode in the Windows Registry or macOS defaults.
 
-### ❓ Conflicto con el puerto `49152`
-* **Solución:** Si otro servicio ocupa el puerto 49152, define la variable de entorno en tu cliente MCP:
+### ❓ Conflict on port `49152`
+* **Resolution:** If another service occupies port 49152, set the environment variable in your MCP client configuration:
   ```json
   "env": {
     "ADOBE_MCP_DAEMON_PORT": "50000"
@@ -203,9 +207,9 @@ En lugar de sobrecargar la ventana de contexto de la IA exponiendo 62 herramient
 
 ---
 
-## 🛠️ Desarrollo Local y Contribución
+## 🛠️ Local Development & Contributing
 
-Si deseas contribuir al desarrollo del monorepo:
+To contribute to the monorepo:
 
 ```powershell
 git clone https://github.com/hyukudan/kirei-adobe-mcp.git
@@ -218,12 +222,12 @@ pnpm turbo run test typecheck
 
 ---
 
-## 🤝 Ingeniería Colaborativa Multi-Modelo
+## 🤝 Multi-Model Collaborative Engineering
 
-Este proyecto ha sido diseñado e implementado mediante ingeniería colaborativa avanzada, aprovechando capacidades de razonamiento profundo y arquitectura multi-modelo de **Google DeepMind**, **Anthropic** y **OpenAI**, junto con las APIs oficiales y especificaciones de **Adobe Creative Cloud** y **Model Context Protocol**.
+This project was architected and built through advanced collaborative engineering, leveraging deep reasoning and multimodal capabilities from **Google DeepMind**, **Anthropic**, and **OpenAI**, alongside official **Adobe Creative Cloud** and **Model Context Protocol** specifications.
 
 ---
 
-## 📄 Licencia
+## 📄 License
 
-Distribuido bajo la Licencia MIT. Consulta [LICENSE](LICENSE) para más información.
+Distributed under the MIT License. See [LICENSE](LICENSE) for details.

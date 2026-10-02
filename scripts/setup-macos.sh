@@ -8,21 +8,21 @@ echo "================================================="
 echo ""
 
 # 1. Check Node.js
-echo "[1/4] Verificando Node.js..."
-node -v || { echo "Node.js no encontrado. Instala Node.js 20+ desde https://nodejs.org"; exit 1; }
+echo "[1/4] Verifying Node.js environment..."
+node -v || { echo "Node.js not found. Please install Node.js 20+ from https://nodejs.org"; exit 1; }
 
 # 2. Run CLI Setup
-echo "[2/4] Configurando clientes MCP..."
+echo "[2/4] Configuring MCP clients..."
 node bin/cli.mjs setup
 
 # 3. Install Plugins
-echo "[3/4] Instalando extensiones Adobe..."
+echo "[3/4] Installing Adobe extensions..."
 node bin/cli.mjs install-plugins
 
 # 4. Run Doctor
-echo "[4/4] Ejecutando diagnóstico..."
+echo "[4/4] Running system diagnostic..."
 node bin/cli.mjs doctor
 
 echo "================================================="
-echo "  ✔ Instalación completada con éxito."
+echo "  ✔ Installation completed successfully."
 echo "================================================="
