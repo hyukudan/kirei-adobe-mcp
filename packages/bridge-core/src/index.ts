@@ -56,6 +56,7 @@ function decodePng(bytes: Buffer): DecodedPixels {
     else if (type === "IEND") { seenIend = true; break; }
   }
   if (!seenIend || width < 1 || height < 1 || !idat.length) throw new Error("invalid PNG structure");
+  if (width > 16_384 || height > 16_384 || width * height > 64 * 1024 * 1024) throw new Error("PNG dimensions exceed safety limits");
   if (bitDepth !== 8 || interlace !== 0 || ![0, 2, 3, 4, 6].includes(colorType)) throw new Error("unsupported PNG pixel format");
   if (colorType === 3 && (!paletteValue || paletteValue.length % 3 !== 0)) throw new Error("invalid PNG palette");
   const channels = colorType === 6 ? 4 : colorType === 2 ? 3 : colorType === 4 ? 2 : 1;
@@ -120,6 +121,7 @@ export function decodeImageDimensions(value: string): { format: "png" | "jpeg"; 
 }
 
 export function compareBase64Images(baselineImageBase64: string, currentImageBase64: string, tolerance: number): VisualVerifyResult {
+  if (!Number.isFinite(tolerance) || tolerance < 0 || tolerance > 1) return invalidImage("tolerance must be a finite number between 0 and 1", currentImageBase64);
   let baseline: { bytes: Buffer; image: DecodedPixels }, current: { bytes: Buffer; image: DecodedPixels };
   try { baseline = decodeImage(baselineImageBase64); } catch (error) { return invalidImage(`baseline: ${error instanceof Error ? error.message : "invalid image"}`, currentImageBase64); }
   try { current = decodeImage(currentImageBase64); } catch (error) { return invalidImage(`current: ${error instanceof Error ? error.message : "invalid image"}`, currentImageBase64); }
@@ -164,7 +166,7 @@ export class BridgeLifecycleManager {
 
 export class IdempotencyStore<T> {
   private readonly values = new Map<string, { inputHash: string; value: T; expiresAt: number }>();
-  constructor(private readonly ttlMs = 24 * 60 * 60 * 1000) {}
+  constructor(private readonly ttlMs = 24 * 60 * 60 * 1000) { if (!Number.isSafeInteger(ttlMs) || ttlMs <= 0) throw new Error("INVALID_ARGUMENT: ttlMs must be a positive safe integer"); }
   get(operationId: string, inputHash?: string): T | undefined { const entry = this.values.get(operationId); if (!entry) return undefined; if (entry.expiresAt < Date.now()) { this.values.delete(operationId); return undefined; } if (inputHash !== undefined && entry.inputHash !== inputHash) throw new Error("CONFLICT: operationId reused with different payload"); return entry.value; }
   set(operationId: string, value: T, inputHash = ""): void { const existing = this.values.get(operationId); if (existing && existing.inputHash !== inputHash) throw new Error("CONFLICT: operationId reused with different payload"); this.values.set(operationId, { inputHash, value, expiresAt: Date.now() + this.ttlMs }); }
 }
@@ -197,7 +199,7 @@ export class SnapshotStore {
 export interface LockLease { key: string; token: string; expiresAt: number; }
 export class LockManager {
   private readonly locks = new Map<string, LockLease>();
-  acquire(keys: readonly string[], ttlMs = 30_000): LockLease[] { const ordered = [...new Set(keys)].sort(); const now = Date.now(); for (const key of ordered) { const current = this.locks.get(key); if (current && current.expiresAt > now) throw new Error(`LOCKED: ${key}`); } const leases = ordered.map((key) => ({ key, token: createNonce(16), expiresAt: now + ttlMs })); leases.forEach((lease) => this.locks.set(lease.key, lease)); return leases; }
+  acquire(keys: readonly string[], ttlMs = 30_000): LockLease[] { if (!Number.isSafeInteger(ttlMs) || ttlMs <= 0) throw new Error("INVALID_ARGUMENT: ttlMs must be a positive safe integer"); const ordered = [...new Set(keys)]; if (ordered.some((key) => !key)) throw new Error("INVALID_ARGUMENT: lock keys must be non-empty"); ordered.sort(); const now = Date.now(); for (const key of ordered) { const current = this.locks.get(key); if (current && current.expiresAt > now) throw new Error(`LOCKED: ${key}`); } const leases = ordered.map((key) => ({ key, token: createNonce(16), expiresAt: now + ttlMs })); leases.forEach((lease) => this.locks.set(lease.key, lease)); return leases; }
   release(leases: readonly LockLease[]): void { for (const lease of leases) if (this.locks.get(lease.key)?.token === lease.token) this.locks.delete(lease.key); }
   sweep(now = Date.now()): void { for (const [key, lease] of this.locks) if (lease.expiresAt <= now) this.locks.delete(key); }
 }
@@ -215,7 +217,8 @@ export abstract class BaseMockBridge implements AdobeBridge {
   async inspect(request: InspectRequest): Promise<InspectResult> { return { target: request.target, revision: this.revision, data: { app: this.descriptor.app, instanceId: this.descriptor.instanceId, fields: request.fields ?? ["id", "revision"] } }; }
   async capturePreview(request: PreviewCaptureRequest): Promise<PreviewCaptureData> {
     const pixel = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=";
-    return { imageBase64: pixel, mimeType: request.format === "jpeg" ? "image/jpeg" : "image/png", width: 1, height: 1, revision: this.revision, capturedAt: new Date().toISOString() };
+    // The in-memory bridge only embeds a PNG fixture; never mislabel those bytes as JPEG.
+    return { imageBase64: pixel, mimeType: "image/png", width: 1, height: 1, revision: this.revision, capturedAt: new Date().toISOString() };
   }
   async verifyVisual(request: VisualVerifyRequest): Promise<VisualVerifyResult> { const current = await this.capturePreview({ target: request.target, format: "png", maxDimension: 4096, ...(request.time ? { time: request.time } : {}) }); return compareBase64Images(request.baselineImageBase64, current.imageBase64, request.tolerance); }
   async mutate(request: MutationRequest): Promise<OperationReceipt> { const hash = inputHash(request); const cached = this.operationReceipts.get(request.options.operationId); if (cached) { if (this.operationHashes.get(request.options.operationId) !== hash) throw new Error("CONFLICT: operationId reused with different payload"); return cached; } if (request.options.expectedRevision && request.options.expectedRevision !== this.revision) throw new Error("CONFLICT"); if (!request.options.dryRun) this.revision = `rev-${Date.now()}`; const receipt = { status: request.options.dryRun ? "planned" : "applied", previousRevision: request.options.expectedRevision ?? "rev-0", revision: this.revision, appliedIndexes: request.options.dryRun ? [] : request.commands.map((_, i) => i), failedIndexes: [], tempIdMap: {}, compensations: [], verification: request.options.verification === "none" ? "skipped" : "passed" } as OperationReceipt; this.operationHashes.set(request.options.operationId, hash); this.operationReceipts.set(request.options.operationId, receipt); return receipt; }

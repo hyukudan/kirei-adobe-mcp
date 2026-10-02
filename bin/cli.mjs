@@ -324,8 +324,12 @@ async function main() {
       break;
     case "stdio":
     case "start":
-    default:
       await startGateway();
+      break;
+    default:
+      error(`Unknown command: ${command}`);
+      printHelp();
+      process.exitCode = 2;
       break;
   }
 }

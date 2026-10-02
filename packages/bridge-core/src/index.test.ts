@@ -46,4 +46,9 @@ describe("pixel-accurate visual verification", () => {
     expect(compareBase64Images("not-base64!", red, 1)).toMatchObject({ match: false, diffScore: 1 });
     expect(compareBase64Images(Buffer.from("hello").toString("base64"), red, 1).details.reason).toContain("magic bytes");
   });
+
+  it("rejects invalid tolerances instead of producing misleading comparisons", () => {
+    expect(compareBase64Images(red, red, Number.NaN)).toMatchObject({ match: false, diffScore: 1 });
+    expect(compareBase64Images(red, red, 1.1).details.reason).toContain("tolerance");
+  });
 });

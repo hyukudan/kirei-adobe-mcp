@@ -43,7 +43,13 @@ export function localTokenPath(env: NodeJS.ProcessEnv = process.env): string {
 export function loadOrCreateLocalToken(path = localTokenPath()): string {
   if (existsSync(path)) { const token = readFileSync(path, "utf8").trim(); if (/^[A-Za-z0-9_-]{43}$/.test(token)) return token; throw new Error("UNAUTHENTICATED: invalid daemon token file"); }
   mkdirSync(dirname(path), { recursive: true, mode: 0o700 });
-  const token = createLocalToken(); writeFileSync(path, `${token}\n`, { encoding: "utf8", mode: 0o600, flag: "wx" });
+  const token = createLocalToken();
+  try { writeFileSync(path, `${token}\n`, { encoding: "utf8", mode: 0o600, flag: "wx" }); }
+  catch (error) {
+    // Another gateway may have won the atomic create between existsSync and writeFileSync.
+    if (error instanceof Error && "code" in error && (error as NodeJS.ErrnoException).code === "EEXIST") return readLocalToken(path);
+    throw error;
+  }
   try { chmodSync(path, 0o600); } catch { /* Windows ACLs are inherited from the private data directory. */ }
   return token;
 }
@@ -54,7 +60,7 @@ export function computeAuthProof(token: string, clientNonce: string, serverNonce
 export function verifyAuthProof(expected: string, actual: string): boolean {
   const a = Buffer.from(expected); const b = Buffer.from(actual); return a.length === b.length && timingSafeEqual(a, b);
 }
-export function isLoopbackHost(host: string): boolean { return host === "127.0.0.1" || host === "::1" || host === "localhost"; }
+export function isLoopbackHost(host: string): boolean { const normalized = host.toLowerCase().replace(/^\[|\]$/g, "").split("%")[0]; return normalized === "127.0.0.1" || normalized === "::1" || normalized === "::ffff:127.0.0.1" || normalized === "localhost"; }
 export function isAllowedOrigin(origin: string, allowlist: readonly string[]): boolean { return allowlist.includes(origin); }
 export function assertFrameSize(frame: string, maxBytes = 8 * 1024 * 1024): void { if (Buffer.byteLength(frame, "utf8") > maxBytes) throw new Error("frame exceeds configured limit"); }
 export function makeRpcError(id: z.infer<typeof RpcId> | null, error: ProtocolError): z.infer<typeof JsonRpcResponse> { return { jsonrpc: "2.0", id, error: { code: -32000, message: error.message, data: error } }; }

@@ -14,6 +14,14 @@ import { AfterEffectsExpressionControl, AfterEffectsPresetApply, AfterEffectsPre
 
 interface DaemonStoredArtifact { readonly sha256: string; readonly uri: string; readonly sizeBytes: number; readonly mediaType?: string; readonly createdAt: string; readonly immutable: true; readonly provenance: Record<string, unknown>; }
 
+function decodeArtifactBase64(value: string): Buffer {
+  if (!value || !/^[A-Za-z0-9+/_-]*={0,2}$/.test(value) || value.length % 4 === 1) throw new Error("EXPORT_FAILED: invalid artifact Base64");
+  const normalized = value.replace(/-/g, "+").replace(/_/g, "/");
+  const bytes = Buffer.from(normalized, "base64");
+  if (bytes.toString("base64").replace(/=+$/, "") !== normalized.replace(/=+$/, "")) throw new Error("EXPORT_FAILED: invalid artifact Base64");
+  return bytes;
+}
+
 /** Fallback store for raw UXP export payloads arriving directly at the daemon. */
 class DaemonArtifactStore {
   constructor(private readonly root = process.env.ADOBE_MCP_ARTIFACT_ROOT ?? join(tmpdir(), "adobe-mcp", "artifacts")) {}
@@ -62,7 +70,7 @@ class PanelBridge implements AdobeBridge {
         if (!item || typeof item !== "object") throw new Error("EXPORT_FAILED: invalid Photoshop layer bytes");
         const value = item as { layerId?: unknown; name?: unknown; format?: unknown; bytesBase64?: unknown; mediaType?: unknown };
         if (typeof value.layerId !== "string" || typeof value.bytesBase64 !== "string") throw new Error("EXPORT_FAILED: layer export is missing id or bytes");
-        const bytes = Buffer.from(value.bytesBase64, "base64"); const format = String(value.format ?? parsed.format); const name = String(value.name ?? value.layerId); const stored = await this.artifactStore.put(bytes, typeof value.mediaType === "string" ? value.mediaType : `image/${format}`, { app: "photoshop", layerId: value.layerId, sourceDocumentId: parsed.target.documentId ?? "active" });
+        const bytes = decodeArtifactBase64(value.bytesBase64); const format = String(value.format ?? parsed.format); const name = String(value.name ?? value.layerId); const stored = await this.artifactStore.put(bytes, typeof value.mediaType === "string" ? value.mediaType : `image/${format}`, { app: "photoshop", layerId: value.layerId, sourceDocumentId: parsed.target.documentId ?? "active" });
         const artifact = { artifactId: `photoshop-layer-${stored.sha256.slice(0, 16)}`, kind: "file" as const, displayName: `${name}.${format}`, mediaType: stored.mediaType, sizeBytes: stored.sizeBytes, sha256: stored.sha256, provenance: { app: "photoshop" as const } }; artifacts.push(artifact); entries.push({ layerId: value.layerId, name, fileName: artifact.displayName, uri: stored.uri, sha256: stored.sha256, sizeBytes: stored.sizeBytes });
       }
       return PhotoshopLayerExportResult.parse({ manifest: { version: "1", sourceDocumentId: parsed.target.documentId ?? "active", entries }, artifacts });
@@ -76,7 +84,7 @@ class PanelBridge implements AdobeBridge {
         if (!item || typeof item !== "object") throw new Error("EXPORT_FAILED: invalid Illustrator artboard bytes");
         const value = item as { id?: unknown; name?: unknown; width?: unknown; height?: unknown; bytesBase64?: unknown; mediaType?: unknown };
         if (typeof value.id !== "string" || typeof value.bytesBase64 !== "string") throw new Error("EXPORT_FAILED: artboard export is missing id or bytes");
-        const bytes = Buffer.from(value.bytesBase64, "base64"); const extension = parsed.format; const name = String(value.name ?? value.id); const stored = await this.artifactStore.put(bytes, typeof value.mediaType === "string" ? value.mediaType : extension === "svg" ? "image/svg+xml" : "image/png", { app: "illustrator", artboardId: value.id });
+        const bytes = decodeArtifactBase64(value.bytesBase64); const extension = parsed.format; const name = String(value.name ?? value.id); const stored = await this.artifactStore.put(bytes, typeof value.mediaType === "string" ? value.mediaType : extension === "svg" ? "image/svg+xml" : "image/png", { app: "illustrator", artboardId: value.id });
         const artifact = { artifactId: `illustrator-artboard-${stored.sha256.slice(0, 16)}`, kind: "file" as const, displayName: `${name}.${extension}`, mediaType: stored.mediaType, sizeBytes: stored.sizeBytes, sha256: stored.sha256, provenance: { app: "illustrator" as const } }; artifacts.push(artifact); entries.push({ artboardId: value.id, name, width: value.width, height: value.height, fileName: artifact.displayName, uri: stored.uri, sha256: stored.sha256, sizeBytes: stored.sizeBytes });
       }
       return IllustratorArtboardExportResult.parse({ manifest: { version: "1", format: parsed.format, entries }, artifacts });
@@ -90,7 +98,7 @@ class PanelBridge implements AdobeBridge {
   async cancel(jobId: string): Promise<Job> { return this.call("bridge.cancel", { jobId }) as Promise<Job>; }
   async close(): Promise<void> { for (const pending of this.pending.values()) pending.reject(new Error("BRIDGE_UNAVAILABLE: panel disconnected")); this.pending.clear(); }
   handleResponse(response: { id: string | number | null; result?: unknown; error?: { message: string } }): void { const pending = this.pending.get(String(response.id)); if (!pending) return; this.pending.delete(String(response.id)); if (response.error) pending.reject(new Error(response.error.message)); else pending.resolve(response.result); }
-  private call(method: string, params: unknown): Promise<unknown> { return new Promise((resolve, reject) => { const id = randomUUID(); this.pending.set(id, { resolve, reject }); try { this.socket.send(JSON.stringify({ type: "rpc", request: { jsonrpc: "2.0", id, method, params } })); } catch (error) { this.pending.delete(id); reject(error instanceof Error ? error : new Error("BRIDGE_UNAVAILABLE")); } }); }
+  private call(method: string, params: unknown): Promise<unknown> { return new Promise((resolve, reject) => { const id = randomUUID(); const timeout = setTimeout(() => { this.pending.delete(id); reject(new Error("TIMEOUT: Adobe panel request timed out")); }, 30_000); this.pending.set(id, { resolve: (value) => { clearTimeout(timeout); resolve(value); }, reject: (error) => { clearTimeout(timeout); reject(error); } }); try { this.socket.send(JSON.stringify({ type: "rpc", request: { jsonrpc: "2.0", id, method, params } })); } catch (error) { const pending = this.pending.get(id); this.pending.delete(id); pending?.reject(error instanceof Error ? error : new Error("BRIDGE_UNAVAILABLE")); } }); }
 }
 
 type ToolHandler = (input: Record<string, unknown>) => Promise<unknown>;

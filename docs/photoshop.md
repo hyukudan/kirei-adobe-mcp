@@ -13,9 +13,9 @@ Automate Adobe Photoshop through a secure, typed UXP bridge with zero raw script
 | **Document & Layer Inspection** | **R0** | `adobe.photoshop.inspect`, `adobe.photoshop.document` | Fully implemented. Returns bounds, color profiles, hierarchy, opaque IDs, and document revision. |
 | **Layer Manipulation & Transforms** | **R2** | `adobe.photoshop.layers.edit`, `adobe.photoshop.transform.apply` | Implemented. Supports create, set, opacity, blend modes, matrix transforms, warp grids, and bicubic interpolation. |
 | **Layer Content & Rasterization** | **R2** | `adobe.photoshop.layers.content` | Implemented. Handles solid fills, artifact placing, Smart Object conversion, and rasterization. |
-| **Smart Selection AI** | **R2** | `adobe.photoshop.selection.smart` | Implemented in registry. Supports *Select Subject*, *Color Range*, and *Object Selection* via typed `batchPlay`. |
-| **Layer Styles & FX** | **R2** | `adobe.photoshop.layer.styles` | Implemented. Typed descriptors for Drop Shadow, Outer/Inner Glow, Bevel & Emboss, Stroke, and Color Overlay. |
-| **Channel & Luminosity Masks** | **R2** | `adobe.photoshop.channel.mask` | Implemented. Generates non-destructive masks targeting Lights, Midtones, Shadows, or discrete Alpha channels. |
+| **Smart Selection AI** | **R2** | `adobe.photoshop.selection.smart` | Experimental registry surface. Supports typed subject, color-range, and bounded-object selection where the connected host advertises the required capability. |
+| **Layer Styles & FX** | **R2** | `adobe.photoshop.layer.styles` | Experimental. Typed, allowlisted style descriptors; host-version probing and render verification are required. |
+| **Channel & Luminosity Masks** | **R2** | `adobe.photoshop.channel.mask` | Experimental. Capability-gated luminosity/alpha-channel mask generation. |
 | **Adjustment Layers** | **R2** | `adobe.photoshop.layers.content` (Curves/Levels) | Implemented via typed bridge builders for Curves, Levels, Hue/Saturation, and Color Balance. |
 | **Content-Addressed Layer Export** | **R3** | `adobe.photoshop.exportLayers` | Implemented. Non-destructive layer isolation, real PNG/PSD binary generation, and SHA-256 CAS manifest. |
 | **Document Export** | **R1** | `adobe.photoshop.export` | Implemented. Exports PSD, PSB, PNG, JPEG, TIFF, or WebP with file grant binding and dimension checks. |
@@ -24,6 +24,9 @@ Automate Adobe Photoshop through a secure, typed UXP bridge with zero raw script
 
 > [!NOTE]
 > All mutations enforce revision checking (`expectedRevision`). If a human designer edits the canvas between plan compilation and execution, the bridge aborts with `CONFLICT` to prevent state corruption.
+
+> [!IMPORTANT]
+> “Implemented” means that a repository contract or adapter path exists. It is not a certification claim for every Photoshop release. Read `adobe.system.status` and `adobe.system.capabilities`, perform a dry-run, and require state or render verification before relying on a host-specific operation.
 
 ---
 
@@ -60,6 +63,103 @@ flowchart LR
   BP --> DOM
   DOM -->|"Binary Pixels / Artifacts"| CAS
 ```
+
+---
+
+## End-to-End Production Workflow
+
+Treat a Photoshop automation as a revision-bound loop rather than a one-shot macro:
+
+```mermaid
+flowchart LR
+    A[Inspect document] --> B[Resolve stable IDs]
+    B --> C[Build bounded recipe]
+    C --> D[Dry-run and review diff]
+    D --> E{Revision unchanged?}
+    E -- No --> A
+    E -- Yes --> F[Apply in one modal scope]
+    F --> G[Re-inspect state]
+    G --> H[Render preview]
+    H --> I{Visual QA passes?}
+    I -- No --> C
+    I -- Yes --> J[Export immutable artifacts]
+```
+
+### Recommended non-destructive layer order
+
+```text
+OUTPUT CHECKS       temporary proof and gamut-warning layers
+TEXTURE             grain, dust, halation, vignette
+LOOK                split tone, palette mapping, selective color
+CONTRAST            curves, levels, dodge and burn
+CORRECTION          white balance, exposure, lens cleanup
+SUBJECT / PLATES    Smart Objects and retouch layers
+SOURCE              locked original or linked master
+```
+
+Record mode, bit depth, profile, dimensions, active layer, document ID, and revision before planning. Sixteen bits/channel generally gives aggressive Curves and gradients more headroom, but changing bit depth or color profile is a document-wide decision and must be explicit. Name layers by purpose (`LOOK — cyan shadows`) and persist their returned IDs; re-running a recipe should patch its existing group rather than duplicate it.
+
+## Detailed Recipe: 1980s Horror Key Art
+
+The target is a theatrical print look: cool cyan shadows, bruised violet midtones, hot red practicals, dense blacks, restrained warm bloom, and tactile film texture. Normalize exposure before stylizing and protect believable skin.
+
+| Role | Starting color | Purpose |
+|---|---:|---|
+| Ink black | `#08070D` | background and title shadow |
+| Midnight blue | `#10243E` | shadow bias |
+| Corpse cyan | `#2B9AA0` | cool reflected light |
+| Bruised violet | `#56345F` | midtone separation |
+| Blood red | `#B51F2E` | focal practicals |
+| Sodium amber | `#E38A3A` | rim light and title highlights |
+| Bone | `#E6D7B8` | restrained paper white |
+
+1. **Normalize:** establish black and white points without clipping important texture. Avoid adding the look while exposure and white balance are still unstable.
+2. **Shape contrast:** add a gentle RGB S-curve. Useful normalized points are `(0,0)`, `(32,22)`, `(96,82)`, `(160,176)`, `(224,238)`, `(255,250)`.
+3. **Split channels:** lower red slightly in the shadows and lift it in upper midtones; lift blue in shadows and lower it in highlights. Keep endpoints conservative to prevent colored clipping.
+4. **Bias the palette:** push shadows toward cyan/blue, midtones gently toward magenta, and highlights toward yellow/red. Preserve luminosity when the supported operation exposes that option.
+5. **Protect skin:** clip a corrective Hue/Saturation or Curves layer to the subject. Remove excess magenta/cyan from skin without neutralizing red props and practicals.
+6. **Motivate red light:** paint or composite glow on its own layer using `Screen` or `Linear Dodge (Add)`, blur it, and mask it to a believable source.
+7. **Build halation:** isolate only bright boundaries, blur roughly 6–30 px according to image size, tint warm red-orange, and blend at 5–20%. Halation is not a full-frame haze.
+8. **Finish:** apply output-scale grain, a restrained vignette, and optional dust. Check title counters, eyes, and fine silhouettes at 100%.
+
+Dedicated color controls remain host- and capability-dependent. Create or update individual adjustment layers when supported and stop at a documented handoff when a required typed builder is unavailable; do not silently replace the look with destructive pixel edits.
+
+## Detailed Recipe: Vintage Film Grain
+
+Convincing grain is luminance-aware, scale-aware, and reproducible. Grain, dust, scratches, gate weave, bloom, and chromatic misregistration are separate effects and belong on separate layers.
+
+1. Create `TEXTURE — film grain`, fill it with 50% gray, and use `Soft Light` or `Overlay`.
+2. Convert the layer to a Smart Object when supported.
+3. Apply monochromatic Gaussian noise at final output scale.
+4. Add a 0.2–0.9 px Gaussian blur to remove brittle single-pixel noise.
+5. Shape density with Levels/Curves and reduce opacity until texture is visible in flat midtones without hiding fine detail.
+6. Use a luminosity mask to reduce uniform noise in near-black shadows and specular highlights.
+7. Review at 100% and at delivery size. Resize before the final grain pass, or scale radius and amplitude with the output.
+
+| Character | Noise starting point | Blur | Blend / opacity |
+|---|---:|---:|---|
+| Fine 35 mm print | 2–4% | 0.2–0.4 px | Soft Light, 15–35% |
+| Fast 35 mm negative | 4–7% | 0.3–0.6 px | Overlay, 15–30% |
+| Rough 16 mm horror | 6–12% | 0.4–0.9 px | Overlay, 20–45% |
+| Photocopied poster | 8–18% | 0–0.4 px | Multiply/Overlay mix |
+
+Save exact filter parameters, source texture digest or random seed, blend mode, opacity, and final dimensions. A label such as “20% grain” is not reproducible by itself.
+
+## Export and Visual QA
+
+For web, resolve final dimensions before output sharpening and grain, convert/export to the requested color space, embed the profile, and decode the exported file to verify dimensions and alpha. For an archival master, retain adjustment layers, masks, Smart Objects, profile, and high bit depth. For print, obtain the printer profile, total ink limit, bleed, and proofing requirements instead of guessing a CMYK conversion.
+
+| Symptom | Likely cause | Correction |
+|---|---|---|
+| Banding in fog or gradients | low bit depth or excessive curve moves | increase working precision, simplify curves, add subtle dither |
+| Cyan faces | global split tone is too broad | mask a skin correction; reduce midtone cyan |
+| Muddy horror grade | blacks crushed before hue separation | reopen lower shadows and shape contrast first |
+| Grain changes after export | texture added before resizing | apply or rescale grain at delivery dimensions |
+| Flat clipped reds | saturation exceeds output gamut | reduce red luminance/saturation and soft-proof |
+| Export differs from canvas | profile or blend-mode mismatch | compare color-managed previews and embed intentionally |
+| Recipe duplicates itself | layers matched by names | persist and reuse group/layer IDs |
+
+Capture both a fit-to-screen preview for composition and a 100% crop for texture, masks, and edge quality. A state receipt proves that parameters were written; a render proof shows what those parameters actually produced.
 
 ### Setup & Verification
 

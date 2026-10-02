@@ -8661,7 +8661,8 @@
                 "value"
               ],
               "additionalProperties": false
-            }
+            },
+            "maxItems": 100000
           }
         },
         "required": [
